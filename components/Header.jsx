@@ -12,7 +12,11 @@ const Header = () => {
           </Link>
         </div>
         <nav className=" hidden gap-4 justify-center lg:flex ">
-          <Link className="hover:underline cursor-pointer" href="/">
+          <Link
+            className="hover:underline cursor-pointer"
+            target="blank"
+            href="https://utsavpoddar.tech"
+          >
             Contact
           </Link>
         </nav>
@@ -31,8 +35,12 @@ const Header = () => {
             side="right"
           >
             <div className="grid gap-4 p-4 ">
-              <Link className="hover:underline cursor-pointer" href="/">
-                About
+              <Link
+                className="hover:underline cursor-pointer"
+                href="https://utsavpoddar.tech"
+                target="blank"
+              >
+                Contact
               </Link>
             </div>
           </SheetContent>

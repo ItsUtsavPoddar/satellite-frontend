@@ -1,7 +1,15 @@
 "use client";
-
-import React from "react";
-import { MapContainer, TileLayer } from "react-leaflet";
+import L from "leaflet";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+  Polyline,
+  Circle,
+  CircleMarker,
+} from "react-leaflet";
+import { useSelector } from "react-redux";
 
 import "leaflet/dist/leaflet.css";
 import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
@@ -9,13 +17,18 @@ import "leaflet-defaulticon-compatibility";
 // import { NightRegion } from "react-leaflet-night-region";
 
 const LeafMap = () => {
-  // const [satellites, setsatellites] = useState([]);
+  const satellites = useSelector((state) => state.satDataReducer);
+  const icon = L.icon({
+    iconUrl: "https://cdn-icons-png.flaticon.com/512/1209/1209255.png?w=360",
+    iconSize: [30, 30],
+    iconAnchor: [15, 15],
+  });
 
   return (
     <div>
       <MapContainer
         center={[21, 78]}
-        zoom={3}
+        zoom={1}
         scrollWheelZoom={true}
         worldCopyJump={true}
         maxBounds={[
@@ -35,7 +48,48 @@ const LeafMap = () => {
           color="#001a2e"
           refreshInterval={2000} 
         /> */}
-        {/* <Calculation satnumber={"25544"} /> */}
+        {Object.values(satellites).map((sat) => (
+          <div key={sat.id}>
+            <Marker
+              position={[sat.coords[1], sat.coords[0]]}
+              icon={icon}
+              autoPanOnFocus={false}
+              autoPan={false}
+            >
+              <Popup autoPan={false}>
+                Name: {sat.name} SatNum: {sat.id}
+              </Popup>
+            </Marker>
+            <Polyline
+              positions={sat.path[0]}
+              pathOptions={{
+                color: sat.color,
+                weight: 1.5,
+              }}
+              smoothFactor={2}
+            ></Polyline>
+
+            <Polyline
+              positions={sat.path[1]}
+              pathOptions={{
+                color: sat.color,
+                weight: 1.5,
+              }}
+              smoothFactor={2}
+            ></Polyline>
+            <Circle
+              center={[sat.coords[1], sat.coords[0]]}
+              radius={2200e3}
+              pathOptions={{
+                weight: 1.5,
+                opacity: 0.7,
+                color: "red",
+                fillColor: "#f03",
+                fillOpacity: 0.2,
+              }}
+            ></Circle>
+          </div>
+        ))}
       </MapContainer>
     </div>
   );

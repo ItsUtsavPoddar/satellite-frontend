@@ -1,7 +1,7 @@
 "use client";
 
 import { useDispatch, useSelector } from "react-redux";
-import { satCoordsUpdated } from "@/redux/slices/satData";
+import { satCoordsUpdated, satPathUpdated } from "@/redux/slices/satData";
 import { useEffect } from "react";
 const satellite = require("satellite.js");
 
@@ -50,6 +50,54 @@ const Calc = ({ satNum }) => {
     return [long, lat, height];
   };
 
+  const path = (line1, line2) => {
+    var pathC1 = [];
+    var pathC2 = [];
+    const satrec = satellite.twoline2satrec(line1, line2);
+    var date = new Date();
+    var i = 0;
+
+    //console.log(date);
+    for (; i < 3600; i++) {
+      var positionAndVelocity = satellite.propagate(satrec, date);
+      const gmst = satellite.gstime(date);
+      const positionGd = satellite.eciToGeodetic(
+        positionAndVelocity.position,
+        gmst
+      );
+
+      const long = satellite.degreesLong(positionGd.longitude);
+      const lat = satellite.degreesLong(positionGd.latitude);
+      if (long < 179.4) {
+        pathC1.push([lat, long]);
+      } else {
+        break;
+      }
+      date = new Date(date.getTime() + 1000);
+    }
+
+    for (var j = 0; j < 3600 - i; j++) {
+      var positionAndVelocity = satellite.propagate(satrec, date);
+      const gmst = satellite.gstime(date);
+      const positionGd = satellite.eciToGeodetic(
+        positionAndVelocity.position,
+        gmst
+      );
+
+      const long = satellite.degreesLong(positionGd.longitude);
+      const lat = satellite.degreesLong(positionGd.latitude);
+
+      if (long >= -180 && long <= 179) {
+        pathC2.push([lat, long]);
+      }
+
+      date = new Date(date.getTime() + 1000);
+    }
+
+    // console.log(pathC1, pathC2, i, j, date);
+    return [pathC1, pathC2];
+  };
+
   const CalcCoords = () => {
     if (satellites?.tle && satellites.tle.length === 2) {
       const s = satellites.tle[0];
@@ -58,17 +106,36 @@ const Calc = ({ satNum }) => {
       dispatch(
         satCoordsUpdated({
           id: satNum,
-          coords: [data[0].toFixed(4), data[1].toFixed(4)],
+          coords: [data[0].toFixed(2), data[1].toFixed(2)],
           height: data[2].toFixed(1),
         })
       );
     }
   };
 
+  const CalcPath = () => {
+    if (satellites?.tle && satellites.tle.length === 2) {
+      const s = satellites.tle[0];
+      const p = "2 " + satNum + satellites.tle[1];
+      const data = path(s, p);
+      dispatch(
+        satPathUpdated({
+          id: satNum,
+          path: [data[0], data[1]],
+        })
+      );
+    }
+  };
+
   useEffect(() => {
-    const intervalId = setInterval(CalcCoords, 2000);
-    return () => clearInterval(intervalId);
-  }, [satellites]);
+    const intervalId1 = setInterval(CalcCoords, 2000);
+    return () => clearInterval(intervalId1);
+  }, [satellites?.tle]);
+
+  useEffect(() => {
+    const intervalId2 = setInterval(CalcPath, 5000);
+    return () => clearInterval(intervalId2);
+  }, [satellites?.tle]);
   return;
 };
 

@@ -15,7 +15,38 @@ import { satAdded, satDel } from "@/redux/slices/satData";
 import { useState } from "react";
 import FetchSat from "./FetchSat";
 import Calc from "./Calc";
+const colors = [
+  "#FF5733",
+  "#33FF57",
+  "#3357FF",
+  "#FF33A1",
+  "#A133FF",
+  "#33FFF2",
+  "#F2FF33",
+  "#FF8C00",
+  "#FFD700",
+  "#ADFF2F",
+  "#00FF7F",
+  "#20B2AA",
+  "#00CED1",
+  "#1E90FF",
+  "#BA55D3",
+  "#FF69B4",
+  "#FF4500",
+  "#32CD32",
+  "#FFDAB9",
+  "#8A2BE2",
+  "#DC143C",
+  "#4B0082",
+  "#8B0000",
+  "#00FA9A",
+  "#4169E1",
+];
 
+const getRandomColor = () => {
+  const randomIndex = Math.floor(Math.random() * colors.length);
+  return colors[randomIndex];
+};
 const FormSAT = () => {
   const [satNumber, setSatNumber] = useState("");
   const satellites = useSelector((state) => state.satDataReducer);
@@ -23,12 +54,18 @@ const FormSAT = () => {
   const dispatch = useDispatch();
 
   const handleAddSatellite = () => {
+    const color = getRandomColor();
     const newSatellite = {
       id: satNumber,
       name: "SatName",
       coords: ["0", "0"],
       tle: " ",
       height: "0",
+      path: [
+        [[], []],
+        [[], []],
+      ],
+      color: color,
     };
     dispatch(satAdded(newSatellite));
     setSatNumber("");
@@ -73,7 +110,7 @@ const FormSAT = () => {
           <Table>
             <TableHeader className="border-0 text-white">
               <TableRow className="border-0 ">
-                <TableHead>Sat Number</TableHead>
+                <TableHead>Satellite</TableHead>
                 <TableHead>Height</TableHead>
                 <TableHead>Coordinates</TableHead>
                 <TableHead>Actions</TableHead>
@@ -84,7 +121,11 @@ const FormSAT = () => {
                 <TableRow key={sat.id}>
                   <Calc satNum={sat.id} />
                   <FetchSat satNum={sat.id} />
-                  <TableCell>{sat.id}</TableCell>
+                  <TableCell>
+                    [{sat.id}]
+                    <br />
+                    {sat.name}
+                  </TableCell>
                   <TableCell className=" text-white">{sat.height} km</TableCell>
                   <TableCell>
                     {sat.coords[0]}, {sat.coords[1]}
