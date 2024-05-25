@@ -5,35 +5,17 @@ import Link from "next/link";
 const Header = () => {
   return (
     <>
-      <header className="font-cust  text-white fixed top-0 left-0 right-0 z-10 flex items-center justify-between px-4 py-3 bg-[#0a0a0a] bg-opacity-95 text-lg">
+      <div className="font-cust  text-white fixed top-0 left-0 right-0 z-10 flex items-center justify-between px-4 py-3 bg-[#0a0a0a] bg-opacity-95 text-lg">
         <div className="text-xl  font-light">
-          <Link
-            className="cursor-pointer"
-            activeClass="active"
-            to="about"
-            spy={true}
-            smooth={true}
-            offset={-70}
-            duration={500}
-            href="/"
-          >
+          <Link className="cursor-pointer" href="/">
             Satellites Tracker
           </Link>
         </div>
-        {/* <nav className=" hidden gap-4 justify-center lg:flex ">
-          <Link
-            className="hover:underline cursor-pointer"
-            activeClass="active"
-            to="contact"
-            spy={true}
-            smooth={true}
-            offset={-70}
-            duration={500}
-            href="/"
-          >
+        <nav className=" hidden gap-4 justify-center lg:flex ">
+          <Link className="hover:underline cursor-pointer" href="/">
             Contact
           </Link>
-        </nav> */}
+        </nav>
         <Sheet>
           <SheetTrigger asChild>
             <Button
@@ -49,23 +31,13 @@ const Header = () => {
             side="right"
           >
             <div className="grid gap-4 p-4 ">
-              {/* <Link
-                className="hover:underline cursor-pointer"
-                activeClass="active"
-                to="about"
-                spy={true}
-                smooth={true}
-                offset={-70}
-                s
-                duration={500}
-                href="/"
-              >
+              <Link className="hover:underline cursor-pointer" href="/">
                 About
-              </Link> */}
+              </Link>
             </div>
           </SheetContent>
         </Sheet>
-      </header>
+      </div>
     </>
   );
 };
