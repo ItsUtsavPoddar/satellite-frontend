@@ -12,11 +12,18 @@ const satData = createSlice({
       const { id } = action.payload;
       state[id] = action.payload;
     },
+    satFetchData(state, action) {
+      const { id, name, tle } = action.payload;
+      if (state[id]) {
+        state[id].tle = tle;
+        state[id].name = name;
+      }
+    },
     satCoordsUpdated(state, action) {
-      const { id, name, coords } = action.payload;
+      const { id, coords, height } = action.payload;
       if (state[id]) {
         state[id].coords = coords;
-        state[id].name = name;
+        state[id].height = height;
       }
     },
     satDel(state, action) {
@@ -25,5 +32,6 @@ const satData = createSlice({
     },
   },
 });
-export const { satAdded, satCoordsUpdated, satDel } = satData.actions;
+export const { satAdded, satCoordsUpdated, satDel, satFetchData } =
+  satData.actions;
 export default satData.reducer;

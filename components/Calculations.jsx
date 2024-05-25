@@ -3,11 +3,11 @@
 import { useDispatch, useSelector } from "react-redux";
 import { satCoordsUpdated } from "@/redux/slices/satData";
 import axios from "axios";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 const satellite = require("satellite.js");
 
-const Calculations = ({ satNum, shouldStopInterval }) => {
-  const [intervalId, setIntervalId] = useState(null);
+const Calculations = ({ satNum, stopInterval }) => {
+  const intervalIdRef = useRef(null);
 
   const dispatch = useDispatch();
   const [longi, setlong] = useState(0);
@@ -20,7 +20,6 @@ const Calculations = ({ satNum, shouldStopInterval }) => {
   var name;
 
   useEffect(() => {
-    let ignore = false;
     const fetchData = async () => {
       try {
         // const [tleResponse, nameResponse] = await Promise.all([
@@ -44,7 +43,7 @@ const Calculations = ({ satNum, shouldStopInterval }) => {
 
         xyz =
           "1 25544U 98067A   23131.59547726  .00014612  00000+0  26229-3 0  9992 2 25544  51.6400 149.8957 0006321 335.8261 168.3051 15.50121033396116";
-        ("1 56179U 23054B   23149.85624328  .00006627  00000+0  29623-3 0  9994 2 56179  97.4043  44.9672 0010893 101.7937 258.4522 15.21601277  7375");
+        // ("1 56179U 23054B   23149.85624328  .00006627  00000+0  29623-3 0  9994 2 56179  97.4043  44.9672 0010893 101.7937 258.4522 15.21601277  7375");
         // tleResponse.data;
         xyz.toString();
         abc = xyz.split("2 " + satNum);
@@ -52,11 +51,9 @@ const Calculations = ({ satNum, shouldStopInterval }) => {
         // abc = xyz.split("2 " + "56179");
         // console.log(abc[1].trim());
         if (!ignore) {
-          const inter = setInterval(() => {
+          intervalIdRef.current = setInterval(() => {
             fitLat(); // Pass tleData to fitLat function
           }, 2000);
-
-          setIntervalId(inter);
         }
       } catch (error) {
         console.error(error);
@@ -68,12 +65,14 @@ const Calculations = ({ satNum, shouldStopInterval }) => {
       console.log("treue");
     };
   }, []);
+
   useEffect(() => {
-    if (shouldStopInterval && intervalId) {
+    if (stopInterval && intervalIdRef.current) {
       console.log("deleted");
-      clearInterval(intervalId);
+      clearInterval(intervalIdRef.current);
     }
-  }, [shouldStopInterval, intervalId]);
+  }, [stopInterval]);
+
   const cords = (line1, line2) => {
     // console.log(line1, line2);
     const satrec = satellite.twoline2satrec(line1, line2); // Initializing the satellite record with the TLE (line 1 and line 2)

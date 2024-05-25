@@ -14,23 +14,31 @@ import { useSelector, useDispatch } from "react-redux";
 import { satAdded, satDel } from "@/redux/slices/satData";
 import { useState } from "react";
 import Calculations from "./Calculations";
+import FetchSat from "./FetchSat";
+import Calc from "./Calc";
 
 const FormSAT = () => {
   const [satNumber, setSatNumber] = useState("");
   const satellites = useSelector((state) => state.satDataReducer);
-  const [shouldStopInterval, setShouldStopInterval] = useState(false);
+  const [stopInterval, setStopInterval] = useState(false);
 
   const dispatch = useDispatch();
 
   const handleAddSatellite = () => {
-    const newSatellite = { id: satNumber, name: "SatName", coords: ["0", "0"] };
+    const newSatellite = {
+      id: satNumber,
+      name: "SatName",
+      coords: ["0", "0"],
+      tle: " ",
+      height: "0",
+    };
     dispatch(satAdded(newSatellite));
     setSatNumber("");
   };
 
   const handleDeleteSatellite = (id) => {
     dispatch(satDel({ id }));
-    setShouldStopInterval(true);
+    // setStopInterval(true);
   };
 
   return (
@@ -77,12 +85,11 @@ const FormSAT = () => {
             <TableBody>
               {Object.values(satellites).map((sat) => (
                 <TableRow key={sat.id}>
-                  <Calculations
-                    satNum={sat.id}
-                    shouldStopInterval={shouldStopInterval}
-                  />
+                  {/* <Calculations satNum={sat.id} stopInterval={stopInterval} /> */}
+                  <Calc satNum={sat.id} />
+                  <FetchSat satNum={sat.id} />
                   <TableCell>{sat.id}</TableCell>
-                  <TableCell className=" text-white">500 km</TableCell>
+                  <TableCell className=" text-white">{sat.height} km</TableCell>
                   <TableCell>
                     {sat.coords[0]}, {sat.coords[1]}
                   </TableCell>
