@@ -2,7 +2,10 @@
 
 import React from "react";
 import { MapContainer, TileLayer } from "react-leaflet";
+
 import "leaflet/dist/leaflet.css";
+import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
+import "leaflet-defaulticon-compatibility";
 // import { NightRegion } from "react-leaflet-night-region";
 
 const LeafMap = () => {
