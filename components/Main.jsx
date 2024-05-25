@@ -1,6 +1,6 @@
+"use client";
 import FormSAT from "./FormSAT";
 import LeafMap from "./LeafMap";
-import { Button } from "./ui/button";
 
 const Main = () => {
   return (
