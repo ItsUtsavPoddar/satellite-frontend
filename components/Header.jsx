@@ -1,7 +1,6 @@
 import { SheetTrigger, SheetContent, Sheet } from "./ui/sheet";
-
-import Link from "next/link";
 import { Button } from "./ui/button";
+import Link from "next/link";
 
 const Header = () => {
   return (

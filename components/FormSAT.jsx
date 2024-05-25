@@ -13,14 +13,12 @@ import {
 import { useSelector, useDispatch } from "react-redux";
 import { satAdded, satDel } from "@/redux/slices/satData";
 import { useState } from "react";
-import Calculations from "./Calculations";
 import FetchSat from "./FetchSat";
 import Calc from "./Calc";
 
 const FormSAT = () => {
   const [satNumber, setSatNumber] = useState("");
   const satellites = useSelector((state) => state.satDataReducer);
-  const [stopInterval, setStopInterval] = useState(false);
 
   const dispatch = useDispatch();
 
@@ -38,7 +36,6 @@ const FormSAT = () => {
 
   const handleDeleteSatellite = (id) => {
     dispatch(satDel({ id }));
-    // setStopInterval(true);
   };
 
   return (
@@ -85,7 +82,6 @@ const FormSAT = () => {
             <TableBody>
               {Object.values(satellites).map((sat) => (
                 <TableRow key={sat.id}>
-                  {/* <Calculations satNum={sat.id} stopInterval={stopInterval} /> */}
                   <Calc satNum={sat.id} />
                   <FetchSat satNum={sat.id} />
                   <TableCell>{sat.id}</TableCell>

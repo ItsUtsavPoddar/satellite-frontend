@@ -2,7 +2,7 @@
 
 import { useDispatch, useSelector } from "react-redux";
 import { satCoordsUpdated } from "@/redux/slices/satData";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 const satellite = require("satellite.js");
 
 const Calc = ({ satNum }) => {
@@ -66,7 +66,7 @@ const Calc = ({ satNum }) => {
   };
 
   useEffect(() => {
-    const intervalId = setInterval(CalcCoords, 4000);
+    const intervalId = setInterval(CalcCoords, 2000);
     return () => clearInterval(intervalId);
   }, [satellites]);
   return;
