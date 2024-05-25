@@ -21,7 +21,7 @@ const Header = () => {
             Satellites Tracker
           </Link>
         </div>
-        <nav className=" hidden gap-4 justify-center lg:flex ">
+        {/* <nav className=" hidden gap-4 justify-center lg:flex ">
           <Link
             className="hover:underline cursor-pointer"
             activeClass="active"
@@ -34,7 +34,7 @@ const Header = () => {
           >
             Contact
           </Link>
-        </nav>
+        </nav> */}
         <Sheet>
           <SheetTrigger asChild>
             <Button
@@ -50,7 +50,7 @@ const Header = () => {
             side="right"
           >
             <div className="grid gap-4 p-4 ">
-              <Link
+              {/* <Link
                 className="hover:underline cursor-pointer"
                 activeClass="active"
                 to="about"
@@ -62,7 +62,7 @@ const Header = () => {
                 href="/"
               >
                 About
-              </Link>
+              </Link> */}
             </div>
           </SheetContent>
         </Sheet>
