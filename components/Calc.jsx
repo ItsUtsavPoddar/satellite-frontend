@@ -128,11 +128,13 @@ const Calc = ({ satNum }) => {
   };
 
   useEffect(() => {
+    CalcCoords();
     const intervalId1 = setInterval(CalcCoords, 2000);
     return () => clearInterval(intervalId1);
   }, [satellites?.tle]);
 
   useEffect(() => {
+    CalcPath();
     const intervalId2 = setInterval(CalcPath, 5000);
     return () => clearInterval(intervalId2);
   }, [satellites?.tle]);
