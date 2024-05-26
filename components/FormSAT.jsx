@@ -79,15 +79,15 @@ const FormSAT = () => {
     <>
       <div className="mx-auto  ">
         <div className="text-center">
-          <h1 className="text-4xl font-bold">Satellite Number</h1>
+          <h1 className="text-2xl md:text-4xl font-bold">Satellite Number</h1>
           <p className="mt-2 text-gray-50  text-lg">
             View and manage your satellite numbers
           </p>
         </div>
-        <div className="mt-2 flex items-center space-x-2">
+        <div className="mt-2 flex  justify-center space-x-2">
           <Input
             onChange={(e) => setSatNumber(e.target.value)}
-            className="block w-1/2 border-gray-300 text-base p-2 rounded-md shadow-sm text-black"
+            className="block w-1/3 border-gray-300 text-base p-2 rounded-md shadow-sm text-black"
             id="satellite-number"
             maxLength={5}
             pattern="[0-9]{5}"
@@ -98,7 +98,7 @@ const FormSAT = () => {
           />
           <Button
             onClick={handleAddSatellite}
-            className="w-1/2 rounded-md  py-2 px-4 text-base font-medium text-white shadow-sm 
+            className="w-1/3 rounded-md  py-2 px-4 text-base font-medium text-white shadow-sm 
              bg-[#4c0519]  hover:bg-[#660924]"
             type="submit"
           >

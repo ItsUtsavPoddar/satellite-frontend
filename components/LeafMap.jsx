@@ -28,15 +28,15 @@ const LeafMap = () => {
     <div>
       <MapContainer
         center={[21, 78]}
-        zoom={1}
+        zoom={0}
         scrollWheelZoom={true}
         worldCopyJump={true}
         maxBounds={[
           [-90, -180],
           [90, 180],
         ]}
-        minZoom={2}
-        className="static w-full rounded-md shadow-sm h-80 md:h-96 lg:h-128"
+        minZoom={1}
+        className="static w-full rounded-md shadow-sm h-112 md:h-96 lg:h-128"
       >
         <TileLayer
           //   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -79,7 +79,7 @@ const LeafMap = () => {
             ></Polyline>
             <Circle
               center={[sat.coords[1], sat.coords[0]]}
-              radius={2200e3}
+              radius={800e3}
               pathOptions={{
                 weight: 1.5,
                 opacity: 0.7,
