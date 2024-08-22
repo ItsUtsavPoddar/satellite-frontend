@@ -1,36 +1,48 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Satellite Tracker
 
-## Getting Started
+## Overview
 
-First, run the development server:
+Welcome to the Satellite Tracker! This project allows users to discover real-time satellite positioning, view height details, and track the next 80 minutes of their orbital path and beyond. The app leverages orbital data (**TLE**) from [Celestrak](https://celestrak.com/) and is designed to provide a seamless and informative experience for anyone interested in satellite tracking.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Features
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **Real-time Satellite Tracking**: View the current location of satellites in orbit.
+- **Orbital Path Prediction**: Track the satellite's orbit for the next 80 minutes or more.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## Upcoming Features
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+- **User Authentication**: Securely login and save your preferences.
+- **Global Chat**: Connect with other satellite enthusiasts globally.
+- **Data Storage**: Satellite data is stored in the backend for efficient retrieval. The requested data will be refreshed automatically if it is older than 24 hours.
+- **Satellite Passes**: Get information on upcoming satellite passes, including visibility times and locations.
+- **My Own Library**: To calculate satellite position from TLE data.
 
-## Learn More
+## Tech Stack
 
-To learn more about Next.js, take a look at the following resources:
+- **Frontend**: 
+  - React.js with Next.js
+  - Redux for Global state management 
+  - SatelliteJS Library for calculations
+ 
+- **Upcoming Backend**:
+  - Node.js with Express.js
+  - SQL for data storage
+  - JWT for user authentication
+- **APIs**:
+  - Celestrak for satellite data
+- **Hosting**:
+  - Frontend: Vercel
+  - Upcoming Backend: Heroku
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Usage
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+- **Satellite Passes**: Use the "Passes" feature to determine when a satellite will pass overhead and its visibility times, allowing you to plan viewing sessions.
+- **Track any Satellite**: View any satellite's live positions and other data.
+- **Global Chat**: Join the global chat room and connect with other users. You need to be logged in to use the chat feature.
+- **Authentication**: Create an account or log in to save your preferences and chat with others.
 
-## Deploy on Vercel
+## Contributing
+Contributions are welcome! Feel free to submit a pull request or open an issue to discuss potential changes.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+## Contact
+If you have any questions or suggestions, feel free to reach out at utsavpoddar002@gmail.com
