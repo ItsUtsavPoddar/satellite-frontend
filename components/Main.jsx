@@ -14,7 +14,6 @@ const Main = () => {
     []
   );
   return (
-    <>
       <div className="pt-20 pb-10 justify-center pr-0 gap-4 grid grid-cols-1 lg:grid-cols-5 sm:items-center">
         <div className=" z-0 col-start-1 col-end-2 lg:col-start-1 lg:col-end-4 ">
           <LeafMap />
@@ -26,7 +25,6 @@ const Main = () => {
           <FormSAT />
         </div>
       </div>
-    </>
   );
 };
 
