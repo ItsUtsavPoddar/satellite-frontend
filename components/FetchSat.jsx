@@ -3,7 +3,7 @@ import { useDispatch } from "react-redux";
 import axios from "axios";
 import { useState, useEffect } from "react";
 import { satFetchData } from "@/redux/slices/satData";
-
+import { satDel } from "@/redux/slices/satData";
 const FetchSat = ({ satNum }) => {
   const [satName, setSatName] = useState("");
   const [satTle, setSatTle] = useState("");
@@ -31,10 +31,15 @@ const FetchSat = ({ satNum }) => {
 
       const tleData = tleResponse.data.tleString;
       console.log("TLE Data:", tleData);
-
+      if (!tleData) {
+        throw new Error("TLE data is missing");
+      }
       // Split the TLE string into lines
       const tleLines = tleData.split("\r\n").map((line) => line.trim());
 
+      if (tleLines.length < 3) {
+        throw new Error("Incomplete TLE data");
+      }
       // the first line is the satellite name and the next two lines are the TLE lines
       const satName = tleLines[0];
       const tleLine1 = tleLines[1];
@@ -47,7 +52,8 @@ const FetchSat = ({ satNum }) => {
       setSatName(satName);
       setSatTle([tleLine1, tleLine2]);
     } catch (error) {
-      console.error(error);
+      console.error("Error fetching data:", error);
+      dispatch(satDel({ id: satNum }));
     }
   };
   useEffect(() => {
