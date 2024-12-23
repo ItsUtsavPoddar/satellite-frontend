@@ -15,6 +15,10 @@ import { satAdded, satDel } from "@/redux/slices/satData";
 import { useState } from "react";
 import FetchSat from "./FetchSat";
 import Calc from "./Calc";
+import React from "react";
+
+import MostSearchedSatellite from "./MostSearchedSatellite";
+
 const colors = [
   "#FF5733",
   "#33FF57",
@@ -79,7 +83,12 @@ const FormSAT = () => {
     <>
       <div className="mx-auto  ">
         <div className="text-center">
-          <h1 className="text-2xl md:text-4xl font-bold">Satellite Number</h1>
+          <h1 className="text-2xl md:text-4xl font-bold pb-2">
+            Satellite Number
+          </h1>
+          <div className="text-cyan-300">
+            <MostSearchedSatellite />
+          </div>
           <p className="mt-2 text-gray-50  text-lg">
             View and manage your satellite numbers
           </p>

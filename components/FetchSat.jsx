@@ -23,31 +23,29 @@ const FetchSat = ({ satNum }) => {
 
   const fetchData = async () => {
     try {
-      const [tleResponse, nameResponse] = await Promise.all([
-        axios.get("https://celestrak.org/NORAD/elements/gp.php", {
-          params: {
-            CATNR: satNum,
-            FORMAT: "2le",
-          },
-        }),
-        axios.get("https://celestrak.org/NORAD/elements/gp.php", {
-          params: {
-            CATNR: satNum,
-            FORMAT: "tle",
-          },
-        }),
+      const [tleResponse] = await Promise.all([
+        axios.get(
+          `https://satellite-backend-production.up.railway.app/${satNum}`
+        ),
       ]);
-      // console.log("fetched");
-      const nameResponse1 = nameResponse.data;
-      const nameResponse2 = nameResponse1.split("1 " + satNum);
 
-      setSatName(nameResponse2[0].trim());
+      const tleData = tleResponse.data.tleString;
+      console.log("TLE Data:", tleData);
 
-      const tleResponse1 = tleResponse.data;
-      tleResponse1.toString();
-      const tleResponse2 = tleResponse1.replace(/(\r\n|\n|\r)/gm, "");
-      const tleResponse3 = tleResponse2.split("2 " + satNum);
-      setSatTle(tleResponse3);
+      // Split the TLE string into lines
+      const tleLines = tleData.split("\r\n").map((line) => line.trim());
+
+      // the first line is the satellite name and the next two lines are the TLE lines
+      const satName = tleLines[0];
+      const tleLine1 = tleLines[1];
+      const tleLine2 = tleLines[2];
+
+      console.log("Satellite Name:", satName);
+      console.log("TLE Line 1:", tleLine1);
+      console.log("TLE Line 2:", tleLine2);
+
+      setSatName(satName);
+      setSatTle([tleLine1, tleLine2]);
     } catch (error) {
       console.error(error);
     }

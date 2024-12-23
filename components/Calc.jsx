@@ -101,7 +101,7 @@ const Calc = ({ satNum }) => {
   const CalcCoords = () => {
     if (satellites?.tle && satellites.tle.length === 2) {
       const s = satellites.tle[0];
-      const p = "2 " + satNum + satellites.tle[1];
+      const p = satellites.tle[1];
       const data = cords(s, p);
       dispatch(
         satCoordsUpdated({
@@ -116,7 +116,7 @@ const Calc = ({ satNum }) => {
   const CalcPath = () => {
     if (satellites?.tle && satellites.tle.length === 2) {
       const s = satellites.tle[0];
-      const p = "2 " + satNum + satellites.tle[1];
+      const p = satellites.tle[1];
       const data = path(s, p);
       dispatch(
         satPathUpdated({
