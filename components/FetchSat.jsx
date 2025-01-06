@@ -30,7 +30,6 @@ const FetchSat = ({ satNum }) => {
       ]);
 
       const tleData = tleResponse.data.tleString;
-      console.log("TLE Data:", tleData);
       if (!tleData) {
         throw new Error("TLE data is missing");
       }
@@ -44,10 +43,6 @@ const FetchSat = ({ satNum }) => {
       const satName = tleLines[0];
       const tleLine1 = tleLines[1];
       const tleLine2 = tleLines[2];
-
-      console.log("Satellite Name:", satName);
-      console.log("TLE Line 1:", tleLine1);
-      console.log("TLE Line 2:", tleLine2);
 
       setSatName(satName);
       setSatTle([tleLine1, tleLine2]);

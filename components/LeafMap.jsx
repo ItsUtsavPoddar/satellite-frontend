@@ -60,31 +60,25 @@ const LeafMap = () => {
                 Name: {sat.name} SatNum: {sat.id}
               </Popup>
             </Marker>
-            <Polyline
-              positions={sat.path[0]}
-              pathOptions={{
-                color: sat.color,
-                weight: 1.5,
-              }}
-              smoothFactor={2}
-            ></Polyline>
-
-            <Polyline
-              positions={sat.path[1]}
-              pathOptions={{
-                color: sat.color,
-                weight: 1.5,
-              }}
-              smoothFactor={2}
-            ></Polyline>
+            {sat.path.map((pathSegment, index) => (
+              <Polyline
+                key={index}
+                positions={pathSegment}
+                pathOptions={{
+                  color: sat.color,
+                  weight: 1.5,
+                }}
+                smoothFactor={2}
+              ></Polyline>
+            ))}
             <Circle
               center={[sat.coords[1], sat.coords[0]]}
               radius={800e3}
               pathOptions={{
                 weight: 1.5,
-                opacity: 0.7,
-                color: "red",
-                fillColor: "#f03",
+                opacity: 0.3,
+                color: "gray",
+                fillColor: "#000000",
                 fillOpacity: 0.2,
               }}
             ></Circle>

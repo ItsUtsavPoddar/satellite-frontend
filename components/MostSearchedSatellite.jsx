@@ -10,7 +10,7 @@ const MostSearchedSatellite = () => {
         const response = await axios.get(
           "https://satellite-backend-production.up.railway.app/most-fetched"
         );
-        console.log("Response data:", response.data); // Log the response data
+
         setSatellite(response.data);
       } catch (error) {
         console.error("Error fetching most searched satellite:", error);
