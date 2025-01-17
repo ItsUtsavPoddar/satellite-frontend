@@ -4,7 +4,7 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   coordinates: {
-    latitude: 21,
+    latitude: 22,
     longitude: 84,
     height: 0.23,
   },

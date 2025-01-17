@@ -45,13 +45,12 @@ export function Passes({ satelliteId }) {
             <div className="min-w-[800px]">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Start Time</TableHead>
-                    <TableHead>End Time</TableHead>
-                    <TableHead>Max Elevation</TableHead>
+                  <TableRow className="bg-[#1b0e5c]">
                     <TableHead>Visibility</TableHead>
-                    <TableHead>Azimuth Start</TableHead>
-                    <TableHead>Azimuth End</TableHead>
+                    <TableHead>Start</TableHead>
+                    <TableHead>Peak</TableHead>
+                    <TableHead>End</TableHead>
+                    <TableHead>Visible Period</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -62,14 +61,42 @@ export function Passes({ satelliteId }) {
                           {pass.isVisible ? "Visible" : "Not Visible"}
                         </TableCell>
                         <TableCell>
+                          Time:
                           {new Date(pass.startTime).toLocaleString("en-GB")}
+                          <br />
+                          Azimuth: {pass.startAzimuth.toFixed(2)}°
+                          <br />
+                          Elevation: {pass.startElevation.toFixed(2)}°
+                          <br />
+                          Dist_2_Sat: {pass.startRange.toFixed(2)} km
                         </TableCell>
                         <TableCell>
-                          {new Date(pass.endTime).toLocaleString("en-GB")}
+                          Time:{" "}
+                          {new Date(pass.peakTime).toLocaleString("en-GB")}
+                          <br />
+                          Azimuth: {pass.peakAzimuth.toFixed(2)}°
+                          <br />
+                          Elevation: {pass.peakElevation.toFixed(2)}°
+                          <br />
+                          Dist_2_Sat: {pass.peakRange.toFixed(2)} km
                         </TableCell>
-                        <TableCell>{pass.maxElevation.toFixed(2)}°</TableCell>
-                        <TableCell>{pass.startAzimuth.toFixed(2)}°</TableCell>
-                        <TableCell>{pass.endAzimuth.toFixed(2)}°</TableCell>
+
+                        <TableCell>
+                          Time: {new Date(pass.endTime).toLocaleString("en-GB")}
+                          <br />
+                          Azimuth: {pass.endAzimuth.toFixed(2)}°
+                          <br />
+                          Elevation: {pass.endElevation.toFixed(2)}°
+                          <br />
+                          Dist_2_Sat: {pass.endRange.toFixed(2)} km
+                        </TableCell>
+                        <TableCell>
+                          Start:{" "}
+                          {new Date(pass.startTime).toLocaleTimeString("en-GB")}
+                          <br />
+                          End:{" "}
+                          {new Date(pass.endTime).toLocaleTimeString("en-GB")}
+                        </TableCell>
                       </TableRow>
                     ))}
                 </TableBody>

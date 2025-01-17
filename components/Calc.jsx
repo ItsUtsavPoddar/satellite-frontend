@@ -69,6 +69,7 @@ const Calc = ({ satNum }) => {
     let currentPass = null;
     let peakElevation = -Infinity;
     let visibilityStart = null;
+    let hasBeenVisible = false;
     const endDate = new Date();
     endDate.setDate(endDate.getDate() + 10);
 
@@ -105,13 +106,25 @@ const Calc = ({ satNum }) => {
             endAzimuth: azimuth,
             endElevation: elevation,
             endRange: rangeSat,
-            visiblePeriods: [],
+            visiblePeriod: null,
             maxElevation: elevation,
           };
-          peakElevation = elevation;
-          if (isVisible) visibilityStart = date.toISOString();
         }
 
+        if (isVisible) {
+          hasBeenVisible = true;
+          if (!visibilityStart) {
+            visibilityStart = date.toISOString();
+          }
+        } else if (visibilityStart) {
+          currentPass.visiblePeriod = {
+            start: visibilityStart,
+            end: date.toISOString(),
+          };
+          visibilityStart = null;
+        }
+
+        // Update peak and other properties
         if (elevation > peakElevation) {
           peakElevation = elevation;
           currentPass.peakTime = date.toISOString();
@@ -121,64 +134,48 @@ const Calc = ({ satNum }) => {
           currentPass.maxElevation = elevation;
         }
 
-        // Track visibility periods
-        if (isVisible && !visibilityStart) {
-          visibilityStart = date.toISOString();
-        } else if (!isVisible && visibilityStart) {
-          currentPass.visiblePeriods.push({
-            start: visibilityStart,
-            end: date.toISOString(),
-          });
-          currentPass.isVisible = true;
-          visibilityStart = null;
-        }
-
         currentPass.endTime = date.toISOString();
         currentPass.endAzimuth = azimuth;
         currentPass.endElevation = elevation;
         currentPass.endRange = rangeSat;
       } else if (currentPass) {
-        // Add final visibility period if pass ends while visible
         if (visibilityStart) {
-          currentPass.visiblePeriods.push({
+          currentPass.visiblePeriod = {
             start: visibilityStart,
             end: date.toISOString(),
-          });
-          currentPass.isVisible = true;
-          visibilityStart = null;
+          };
         }
 
-        // Check if whole pass was visible
-        if (
-          currentPass.visiblePeriods.length === 1 &&
-          currentPass.visiblePeriods[0].start === currentPass.startTime &&
-          currentPass.visiblePeriods[0].end === currentPass.endTime
-        ) {
-          currentPass.wholePassVisible = true;
+        if (hasBeenVisible) {
+          currentPass.isVisible = true;
         }
 
         if (currentPass.maxElevation >= 10) {
           passes.push(currentPass);
         }
+
+        // Reset for next pass
         currentPass = null;
         peakElevation = -Infinity;
+        visibilityStart = null;
+        hasBeenVisible = false;
       }
     }
 
+    // Handle last pass if exists
     if (currentPass && currentPass.maxElevation >= 10) {
       if (visibilityStart) {
-        currentPass.visiblePeriods.push({
+        currentPass.visiblePeriod = {
           start: visibilityStart,
-          end: endDate.toISOString(),
-        });
-        currentPass.isVisible = true;
+          end: currentPass.endTime,
+        };
       }
+      currentPass.isVisible = hasBeenVisible;
       passes.push(currentPass);
     }
-    // console.log(passes);
+
     return passes;
   };
-
   const path = (line1, line2) => {
     const paths = [];
     let currentPath = [];

@@ -224,7 +224,13 @@ const FormSAT = () => {
             View and manage your satellite numbers
           </p>
         </div>
-        <div className="mt-2 flex  justify-center space-x-2">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleAddSatellite();
+          }}
+          className="mt-2 flex justify-center space-x-2"
+        >
           <Input
             onChange={(e) => setSatNumber(e.target.value)}
             className="block w-1/3 border-gray-300 text-base p-2 rounded-md shadow-sm text-black"
@@ -237,14 +243,12 @@ const FormSAT = () => {
             value={satNumber}
           />
           <Button
-            onClick={handleAddSatellite}
-            className="w-1/3 rounded-md  py-2 px-4 text-base font-medium text-white shadow-sm 
-             bg-[#4c0519]  hover:bg-[#660924]"
             type="submit"
+            className="w-1/3 rounded-md py-2 px-4 text-base font-medium text-white shadow-sm bg-[#4c0519] hover:bg-[#660924]"
           >
             Add Satellite
           </Button>
-        </div>
+        </form>
 
         <div className="pt-5 overflow-hidden text-white">
           <Table>
@@ -268,7 +272,7 @@ const FormSAT = () => {
                     {sat.name}
                   </TableCell>
                   <TableCell className=" text-white text-xs">
-                    height: {sat.height} km <br /> Azimuth: {sat.azimuth}°
+                    Height: {sat.height} km <br /> Azimuth: {sat.azimuth}°
                     <br /> Elevation: {sat.elevation}° <br />
                     Dist_2_Sat: {sat.rangeSat} km
                   </TableCell>
