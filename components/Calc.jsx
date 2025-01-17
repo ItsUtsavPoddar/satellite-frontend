@@ -1,7 +1,13 @@
 "use client";
 
 import { useDispatch, useSelector } from "react-redux";
-import { satCoordsUpdated, satPathUpdated } from "@/redux/slices/satData";
+import {
+  satCoordsUpdated,
+  satPathUpdated,
+  satIsEclipsed,
+  satPassesUpdated,
+  satRiseSetTimeUpdated,
+} from "@/redux/slices/satData";
 import { useEffect } from "react";
 const satellite = require("satellite.js");
 
@@ -76,15 +82,15 @@ const Calc = ({ satNum }) => {
         if (!currentPass) {
           currentPass = {
             isVisible: false,
-            startTime: new Date(date),
+            startTime: date.toISOString(),
             startAzimuth: azimuth,
             startElevation: elevation,
             startRange: rangeSat,
-            peakTime: new Date(date),
+            peakTime: date.toISOString(),
             peakAzimuth: azimuth,
             peakElevation: elevation,
             peakRange: rangeSat,
-            endTime: new Date(date),
+            endTime: date.toISOString(),
             endAzimuth: azimuth,
             endElevation: elevation,
             endRange: rangeSat,
@@ -92,12 +98,12 @@ const Calc = ({ satNum }) => {
             maxElevation: elevation,
           };
           peakElevation = elevation;
-          if (isVisible) visibilityStart = new Date(date);
+          if (isVisible) visibilityStart = date.toISOString();
         }
 
         if (elevation > peakElevation) {
           peakElevation = elevation;
-          currentPass.peakTime = new Date(date);
+          currentPass.peakTime = date.toISOString();
           currentPass.peakAzimuth = azimuth;
           currentPass.peakElevation = elevation;
           currentPass.peakRange = rangeSat;
@@ -106,17 +112,17 @@ const Calc = ({ satNum }) => {
 
         // Track visibility periods
         if (isVisible && !visibilityStart) {
-          visibilityStart = new Date(date);
+          visibilityStart = date.toISOString();
         } else if (!isVisible && visibilityStart) {
           currentPass.visiblePeriods.push({
-            start: new Date(visibilityStart),
-            end: new Date(date),
+            start: visibilityStart,
+            end: date.toISOString(),
           });
           currentPass.isVisible = true;
           visibilityStart = null;
         }
 
-        currentPass.endTime = new Date(date);
+        currentPass.endTime = date.toISOString();
         currentPass.endAzimuth = azimuth;
         currentPass.endElevation = elevation;
         currentPass.endRange = rangeSat;
@@ -124,8 +130,8 @@ const Calc = ({ satNum }) => {
         // Add final visibility period if pass ends while visible
         if (visibilityStart) {
           currentPass.visiblePeriods.push({
-            start: new Date(visibilityStart),
-            end: new Date(date),
+            start: visibilityStart,
+            end: date.toISOString(),
           });
           currentPass.isVisible = true;
           visibilityStart = null;
@@ -134,10 +140,8 @@ const Calc = ({ satNum }) => {
         // Check if whole pass was visible
         if (
           currentPass.visiblePeriods.length === 1 &&
-          currentPass.visiblePeriods[0].start.getTime() ===
-            currentPass.startTime.getTime() &&
-          currentPass.visiblePeriods[0].end.getTime() ===
-            currentPass.endTime.getTime()
+          currentPass.visiblePeriods[0].start === currentPass.startTime &&
+          currentPass.visiblePeriods[0].end === currentPass.endTime
         ) {
           currentPass.wholePassVisible = true;
         }
@@ -153,17 +157,17 @@ const Calc = ({ satNum }) => {
     if (currentPass && currentPass.maxElevation >= 10) {
       if (visibilityStart) {
         currentPass.visiblePeriods.push({
-          start: new Date(visibilityStart),
-          end: new Date(endDate),
+          start: visibilityStart,
+          end: endDate.toISOString(),
         });
         currentPass.isVisible = true;
       }
       passes.push(currentPass);
     }
-
-    console.log(passes);
+    // console.log(passes);
     return passes;
   };
+
   const path = (line1, line2) => {
     const paths = [];
     let currentPath = [];
@@ -193,13 +197,15 @@ const Calc = ({ satNum }) => {
     if (satellites?.tle && satellites.tle.length === 2) {
       const [line1, line2] = satellites.tle;
       const data = cords(line1, line2);
-      isSatelliteInEclipse(line1, line2);
-
       dispatch(
         satCoordsUpdated({
           id: satNum,
           coords: [data[0].toFixed(2), data[1].toFixed(2)],
           height: data[2].toFixed(1),
+        }),
+        satIsEclipsed({
+          id: satNum,
+          isEclipsed: isSatelliteInEclipse(line1, line2),
         })
       );
     }
@@ -221,6 +227,12 @@ const Calc = ({ satNum }) => {
   const Calcpass = () => {
     if (satellites?.tle && satellites.tle.length === 2) {
       const data = passes(satellites.tle[0], satellites.tle[1], observerGd);
+      dispatch(
+        satPassesUpdated({
+          id: satNum,
+          passes: data,
+        })
+      );
     }
   };
 
@@ -325,6 +337,7 @@ const Calc = ({ satNum }) => {
 
     return { alpha, delta, azimuth, elevation, sunEci };
   };
+
   const isSatelliteInEclipse = (line1, line2, date = new Date()) => {
     const satrec = satellite.twoline2satrec(line1, line2);
     const positionAndVelocity = satellite.propagate(satrec, date);
@@ -375,11 +388,11 @@ const Calc = ({ satNum }) => {
     const isPenumbral =
       Math.abs(thetaE - thetaS) < theta && theta < thetaE + thetaS;
 
-    console.log(`isUmbral: ${isUmbral}, isPenumbral: ${isPenumbral}`);
+    //console.log(`isUmbral: ${isUmbral}, isPenumbral: ${isPenumbral}`);
     return { isUmbral, isPenumbral };
   };
 
-  const findEclipseTimes = () => {
+  const RiseSetTimes = () => {
     if (satellites?.tle && satellites.tle.length === 2) {
       const [line1, line2] = satellites.tle;
       const results = [];
@@ -398,7 +411,7 @@ const Calc = ({ satNum }) => {
         // Detect transition
         if (currentEclipseState !== lastEclipseState) {
           results.push({
-            time: new Date(currentTime),
+            time: currentTime.toISOString(),
             type: currentEclipseState ? "sunset" : "sunrise",
           });
         }
@@ -407,22 +420,30 @@ const Calc = ({ satNum }) => {
         currentTime = new Date(currentTime.getTime() + stepSec * 1000);
       }
 
-      // Log results
-      console.log(results);
+      dispatch(
+        satRiseSetTimeUpdated({
+          id: satNum,
+          riseSetTime: results,
+        })
+      );
 
+      //console.log(results);
       return results;
     }
   };
+
   useEffect(() => {
     CalcCoords();
-    findEclipseTimes();
     const intervalId1 = setInterval(CalcCoords, 1000);
     CalcPath();
     const intervalId2 = setInterval(CalcPath, 50000);
+    RiseSetTimes();
+    const intercalId3 = setInterval(RiseSetTimes, 3600000);
     Calcpass();
     return () => {
       clearInterval(intervalId2);
       clearInterval(intervalId1);
+      clearInterval(intercalId3);
     };
   }, [satellites?.tle]);
 

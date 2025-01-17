@@ -14,6 +14,9 @@ const initialState = {
       [[], []],
     ],
     color: "#FF003F",
+    isEclipsed: false,
+    passes: [],
+    riseSetTime: [],
   },
 };
 
@@ -49,6 +52,24 @@ const satData = createSlice({
       const { id } = action.payload;
       delete state[id];
     },
+    satPassesUpdated(state, action) {
+      const { id, passes } = action.payload;
+      if (state[id]) {
+        state[id].passes = passes;
+      }
+    },
+    satIsEclipsed(state, action) {
+      const { id, isEclipsed } = action.payload;
+      if (state[id]) {
+        state[id].isEclipsed = isEclipsed;
+      }
+    },
+    satRiseSetTimeUpdated(state, action) {
+      const { id, riseSetTime } = action.payload;
+      if (state[id]) {
+        state[id].riseSetTime = riseSetTime;
+      }
+    },
   },
 });
 export const {
@@ -57,5 +78,8 @@ export const {
   satDel,
   satFetchData,
   satPathUpdated,
+  satPassesUpdated,
+  satIsEclipsed,
+  satRiseSetTimeUpdated,
 } = satData.actions;
 export default satData.reducer;
