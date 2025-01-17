@@ -18,17 +18,23 @@ import "leaflet-defaulticon-compatibility";
 
 const LeafMap = () => {
   const satellites = useSelector((state) => state.satDataReducer);
+  const user = useSelector((state) => state.userDataReducer);
   const icon = L.icon({
     iconUrl: "https://cdn-icons-png.flaticon.com/512/1209/1209255.png?w=360",
-    iconSize: [30, 30],
-    iconAnchor: [15, 15],
+    iconSize: [22, 22],
+    iconAnchor: [12, 12],
+  });
+  const icon_user = L.icon({
+    iconUrl: "https://cdn-icons-png.flaticon.com/512/16701/16701904.png",
+    iconSize: [18, 18],
+    iconAnchor: [12, 12],
   });
 
   return (
     <div>
       <MapContainer
-        center={[21, 78]}
-        zoom={0}
+        center={[0, 0]}
+        zoom={2}
         scrollWheelZoom={true}
         worldCopyJump={true}
         maxBounds={[
@@ -48,6 +54,12 @@ const LeafMap = () => {
           color="#001a2e"
           refreshInterval={2000} 
         /> */}
+        <Marker
+          position={[user.coordinates.latitude, user.coordinates.longitude]}
+          icon={icon_user}
+          autoPanOnFocus={false}
+          autoPan={false}
+        ></Marker>
         {Object.values(satellites).map((sat) => (
           <div key={sat.id}>
             <Marker

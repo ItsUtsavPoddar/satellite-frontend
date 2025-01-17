@@ -12,10 +12,12 @@ import {
 } from "./ui/table";
 import { useSelector, useDispatch } from "react-redux";
 import { satAdded, satDel } from "@/redux/slices/satData";
-import { useState } from "react";
+import { updateCoordinates } from "@/redux/slices/userData";
+import { useState, useEffect } from "react";
 import FetchSat from "./FetchSat";
 import Calc from "./Calc";
 import React from "react";
+import { Passes } from "@/components/Passes";
 
 import MostSearchedSatellite from "./MostSearchedSatellite";
 
@@ -51,9 +53,85 @@ const getRandomColor = () => {
   const randomIndex = Math.floor(Math.random() * colors.length);
   return colors[randomIndex];
 };
+
+const getNextRiseSetTime = (riseSetTimes) => {
+  const now = new Date();
+  return riseSetTimes.find((time) => new Date(time.time) > now);
+};
+
+const getCountdown = (targetTime) => {
+  const now = new Date();
+  const diff = new Date(targetTime) - now;
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+  return `${hours}h ${minutes}m ${seconds}s`;
+};
+const SatelliteTableCell = ({ sat }) => {
+  const [countdown, setCountdown] = useState("");
+  const [nextTime, setNextTime] = useState(null);
+
+  useEffect(() => {
+    if (!sat || !sat.riseSetTime) return;
+
+    const updateNextTime = () => {
+      const next = getNextRiseSetTime(sat.riseSetTime);
+      setNextTime(next);
+      if (next) {
+        setCountdown(getCountdown(next.time));
+      } else {
+        setCountdown("No upcoming transitions");
+      }
+    };
+
+    updateNextTime();
+
+    const intervalId = setInterval(() => {
+      if (nextTime && new Date(nextTime.time) <= new Date()) {
+        updateNextTime();
+      } else if (nextTime) {
+        setCountdown(getCountdown(nextTime.time));
+      }
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [sat.riseSetTime, nextTime]);
+
+  return (
+    <TableCell>
+      {sat.isEclipsed ? "In Darkness" : "In Sunlight"}
+      <br />
+      <br />
+      {sat.riseSetTime && sat.riseSetTime.length > 0 ? (
+        <>
+          {(() => {
+            const nextTime = getNextRiseSetTime(sat.riseSetTime);
+            if (nextTime) {
+              return (
+                <div className="text-xs">
+                  Next {sat.isEclipsed ? "Sunrise" : "Sunset"}:
+                  <br />
+                  {countdown}
+                </div>
+              );
+            } else {
+              return "No upcoming transitions";
+            }
+          })()}
+        </>
+      ) : (
+        "No Data"
+      )}
+    </TableCell>
+  );
+};
 const FormSAT = () => {
   const [satNumber, setSatNumber] = useState("");
+  const [latitude, setLatitude] = useState("");
+  const [longitude, setLongitude] = useState("");
+  const [height, setHeight] = useState("");
   const satellites = useSelector((state) => state.satDataReducer);
+  const user = useSelector((state) => state.userDataReducer);
 
   const dispatch = useDispatch();
 
@@ -79,10 +157,63 @@ const FormSAT = () => {
     dispatch(satDel({ id }));
   };
 
+  const handleUpdateCoordinates = () => {
+    dispatch(
+      updateCoordinates({
+        latitude: parseFloat(latitude),
+        longitude: parseFloat(longitude),
+        height: parseFloat(height),
+      })
+    );
+    setLatitude("");
+    setLongitude("");
+    setHeight("");
+  };
   return (
     <>
       <div className="mx-auto  ">
         <div className="text-center">
+          <p className="text-orange-400 text-sm ">
+            User Position: Lat = {user.coordinates.latitude} Long ={" "}
+            {user.coordinates.longitude} Height = {user.coordinates.height} km
+          </p>
+          <div className="mt-2 mb-6 flex justify-center items-center gap-1">
+            <Input
+              onChange={(e) => setLatitude(e.target.value)}
+              className="w-16 h-6 p-0.5 text-xs text-black rounded-sm"
+              id="latitude"
+              placeholder="Lat"
+              required
+              type="number"
+              value={latitude}
+            />
+            <Input
+              onChange={(e) => setLongitude(e.target.value)}
+              className="w-16 h-6 p-0.5 text-xs text-black rounded-sm"
+              id="longitude"
+              placeholder="Long"
+              required
+              type="number"
+              value={longitude}
+            />
+            <Input
+              onChange={(e) => setHeight(e.target.value)}
+              className="w-16 h-6 p-0.5 text-xs text-black rounded-sm"
+              id="height"
+              placeholder="Alt(km)"
+              required
+              type="number"
+              value={height}
+            />
+            <Button
+              onClick={handleUpdateCoordinates}
+              className="h-6 px-1.5 text-xs text-white bg-[#4c0519] hover:bg-[#660924] rounded-sm"
+              type="submit"
+            >
+              Update
+            </Button>
+          </div>
+
           <h1 className="text-2xl md:text-4xl font-bold pb-2">
             Satellite Number
           </h1>
@@ -120,8 +251,9 @@ const FormSAT = () => {
             <TableHeader className="border-0 text-white">
               <TableRow className="border-0 ">
                 <TableHead>Satellite</TableHead>
-                <TableHead>Height</TableHead>
+                <TableHead>Stats</TableHead>
                 <TableHead>Coordinates</TableHead>
+                <TableHead>isIlluminated</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -135,15 +267,25 @@ const FormSAT = () => {
                     <br />
                     {sat.name}
                   </TableCell>
-                  <TableCell className=" text-white">{sat.height} km</TableCell>
+                  <TableCell className=" text-white text-xs">
+                    height: {sat.height} km <br /> Azimuth: {sat.azimuth}°
+                    <br /> Elevation: {sat.elevation}° <br />
+                    Dist_2_Sat: {sat.rangeSat} km
+                  </TableCell>
                   <TableCell>
                     {sat.coords[0]}, {sat.coords[1]}
                   </TableCell>
+                  <SatelliteTableCell sat={sat} />
+
                   <TableCell>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2 -m-1.5">
+                      <Passes satelliteId={sat.id} />
+                    </div>
+                    <br />
+                    <div className="flex items-center space-x-2 -m-1.5 ">
                       <Button
                         onClick={() => handleDeleteSatellite(sat.id)}
-                        className="text-white"
+                        className="text-white bg-[#24050e]  hover:bg-[#2d0a14]"
                       >
                         Delete
                       </Button>

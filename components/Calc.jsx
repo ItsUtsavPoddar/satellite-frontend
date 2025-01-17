@@ -14,10 +14,11 @@ const satellite = require("satellite.js");
 const Calc = ({ satNum }) => {
   const dispatch = useDispatch();
   const satellites = useSelector((state) => state.satDataReducer[satNum]);
+  const user = useSelector((state) => state.userDataReducer);
   const observerGd = {
-    longitude: satellite.degreesToRadians(83.9734636),
-    latitude: satellite.degreesToRadians(21.8523304),
-    height: 0.23,
+    longitude: satellite.degreesToRadians(user?.coordinates?.longitude || 0),
+    latitude: satellite.degreesToRadians(user?.coordinates?.latitude || 0),
+    height: user?.coordinates?.height || 0,
   };
 
   const getSatellitePosition = (line1, line2, date = new Date()) => {
@@ -32,6 +33,12 @@ const Calc = ({ satNum }) => {
     const long = satellite.degreesLong(positionGd.longitude);
     const lat = satellite.degreesLat(positionGd.latitude);
     const height = positionGd.height;
+
+    const lookAngles = satellite.ecfToLookAngles(observerGd, positionEcf);
+    const azimuth = satellite.radiansToDegrees(lookAngles.azimuth);
+    const elevation = satellite.radiansToDegrees(lookAngles.elevation);
+    const rangeSat = lookAngles.rangeSat;
+
     return {
       long,
       lat,
@@ -40,6 +47,9 @@ const Calc = ({ satNum }) => {
       positionAndVelocity,
       gmst,
       positionEcf,
+      azimuth,
+      elevation,
+      rangeSat,
     };
   };
 
@@ -49,8 +59,9 @@ const Calc = ({ satNum }) => {
       console.error("TLE data is missing:", line1, line2);
       return [0, 0, 0];
     }
-    const { long, lat, height } = getSatellitePosition(line1, line2);
-    return [long, lat, height];
+    const { long, lat, height, azimuth, elevation, rangeSat } =
+      getSatellitePosition(line1, line2);
+    return [long, lat, height, azimuth, elevation, rangeSat];
   };
 
   const passes = (line1, line2, observerCoords) => {
@@ -197,15 +208,22 @@ const Calc = ({ satNum }) => {
     if (satellites?.tle && satellites.tle.length === 2) {
       const [line1, line2] = satellites.tle;
       const data = cords(line1, line2);
+      const data2 = isSatelliteInEclipse(line1, line2);
+      const isEclipsed = data2.isUmbral || data2.isPenumbral;
       dispatch(
         satCoordsUpdated({
           id: satNum,
           coords: [data[0].toFixed(2), data[1].toFixed(2)],
           height: data[2].toFixed(1),
-        }),
+          azimuth: data[3].toFixed(2),
+          elevation: data[4].toFixed(2),
+          rangeSat: data[5].toFixed(2),
+        })
+      );
+      dispatch(
         satIsEclipsed({
           id: satNum,
-          isEclipsed: isSatelliteInEclipse(line1, line2),
+          isEclipsed: isEclipsed,
         })
       );
     }
@@ -445,7 +463,7 @@ const Calc = ({ satNum }) => {
       clearInterval(intervalId1);
       clearInterval(intercalId3);
     };
-  }, [satellites?.tle]);
+  }, [satellites?.tle, user?.coordinates]);
 
   return;
 };

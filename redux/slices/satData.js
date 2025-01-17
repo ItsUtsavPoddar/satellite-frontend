@@ -17,6 +17,9 @@ const initialState = {
     isEclipsed: false,
     passes: [],
     riseSetTime: [],
+    rangeSat: 0,
+    azimuth: 0,
+    elevation: 0,
   },
 };
 
@@ -36,10 +39,14 @@ const satData = createSlice({
       }
     },
     satCoordsUpdated(state, action) {
-      const { id, coords, height } = action.payload;
+      const { id, coords, height, azimuth, elevation, rangeSat } =
+        action.payload;
       if (state[id]) {
         state[id].coords = coords;
         state[id].height = height;
+        state[id].azimuth = azimuth;
+        state[id].elevation = elevation;
+        state[id].rangeSat = rangeSat;
       }
     },
     satPathUpdated(state, action) {
