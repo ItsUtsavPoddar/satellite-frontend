@@ -9,9 +9,9 @@ const Calc = ({ satNum }) => {
   const dispatch = useDispatch();
   const satellites = useSelector((state) => state.satDataReducer[satNum]);
   const observerGd = {
-    longitude: satellite.degreesToRadians(85.7956695),
-    latitude: satellite.degreesToRadians(20.2516902),
-    height: 0.06,
+    longitude: satellite.degreesToRadians(83.9734636),
+    latitude: satellite.degreesToRadians(21.8523304),
+    height: 0.23,
   };
 
   const getSatellitePosition = (line1, line2, date = new Date()) => {
@@ -51,6 +51,7 @@ const Calc = ({ satNum }) => {
     const passes = [];
     let currentPass = null;
     let peakElevation = -Infinity;
+    let visibilityStart = null;
     const endDate = new Date();
     endDate.setDate(endDate.getDate() + 10);
 
@@ -60,54 +61,109 @@ const Calc = ({ satNum }) => {
       date.setSeconds(date.getSeconds() + 10)
     ) {
       const { positionEcf } = getSatellitePosition(line1, line2, date);
-
       const lookAngles = satellite.ecfToLookAngles(observerCoords, positionEcf);
-
       const azimuth = satellite.radiansToDegrees(lookAngles.azimuth);
       const elevation = satellite.radiansToDegrees(lookAngles.elevation);
       const rangeSat = lookAngles.rangeSat;
 
       if (elevation > 5) {
+        const sunPosition = calculateSunPosition(date);
+        const eclipseStatus = isSatelliteInEclipse(line1, line2, date);
+        const isVisible =
+          sunPosition.elevation < -6 &&
+          !(eclipseStatus.isUmbral || eclipseStatus.isPenumbral);
+
         if (!currentPass) {
           currentPass = {
+            isVisible: false,
+            startTime: new Date(date),
             startAzimuth: azimuth,
             startElevation: elevation,
             startRange: rangeSat,
-            startTime: new Date(date),
+            peakTime: new Date(date),
             peakAzimuth: azimuth,
             peakElevation: elevation,
             peakRange: rangeSat,
-            peakTime: new Date(date),
+            endTime: new Date(date),
             endAzimuth: azimuth,
             endElevation: elevation,
             endRange: rangeSat,
-            endTime: new Date(date),
+            visiblePeriods: [],
+            maxElevation: elevation,
           };
           peakElevation = elevation;
-        } else {
-          if (elevation > peakElevation) {
-            currentPass.peakAzimuth = azimuth;
-            currentPass.peakElevation = elevation;
-            currentPass.peakRange = rangeSat;
-            currentPass.peakTime = new Date(date);
-            peakElevation = elevation;
-          }
-          currentPass.endAzimuth = azimuth;
-          currentPass.endElevation = elevation;
-          currentPass.endRange = rangeSat;
-          currentPass.endTime = new Date(date);
+          if (isVisible) visibilityStart = new Date(date);
         }
+
+        if (elevation > peakElevation) {
+          peakElevation = elevation;
+          currentPass.peakTime = new Date(date);
+          currentPass.peakAzimuth = azimuth;
+          currentPass.peakElevation = elevation;
+          currentPass.peakRange = rangeSat;
+          currentPass.maxElevation = elevation;
+        }
+
+        // Track visibility periods
+        if (isVisible && !visibilityStart) {
+          visibilityStart = new Date(date);
+        } else if (!isVisible && visibilityStart) {
+          currentPass.visiblePeriods.push({
+            start: new Date(visibilityStart),
+            end: new Date(date),
+          });
+          currentPass.isVisible = true;
+          visibilityStart = null;
+        }
+
+        currentPass.endTime = new Date(date);
+        currentPass.endAzimuth = azimuth;
+        currentPass.endElevation = elevation;
+        currentPass.endRange = rangeSat;
       } else if (currentPass) {
-        if (currentPass.peakElevation >= 10) {
+        // Add final visibility period if pass ends while visible
+        if (visibilityStart) {
+          currentPass.visiblePeriods.push({
+            start: new Date(visibilityStart),
+            end: new Date(date),
+          });
+          currentPass.isVisible = true;
+          visibilityStart = null;
+        }
+
+        // Check if whole pass was visible
+        if (
+          currentPass.visiblePeriods.length === 1 &&
+          currentPass.visiblePeriods[0].start.getTime() ===
+            currentPass.startTime.getTime() &&
+          currentPass.visiblePeriods[0].end.getTime() ===
+            currentPass.endTime.getTime()
+        ) {
+          currentPass.wholePassVisible = true;
+        }
+
+        if (currentPass.maxElevation >= 10) {
           passes.push(currentPass);
         }
         currentPass = null;
         peakElevation = -Infinity;
       }
     }
-    console.log(passes);
-  };
 
+    if (currentPass && currentPass.maxElevation >= 10) {
+      if (visibilityStart) {
+        currentPass.visiblePeriods.push({
+          start: new Date(visibilityStart),
+          end: new Date(endDate),
+        });
+        currentPass.isVisible = true;
+      }
+      passes.push(currentPass);
+    }
+
+    console.log(passes);
+    return passes;
+  };
   const path = (line1, line2) => {
     const paths = [];
     let currentPath = [];
@@ -137,6 +193,8 @@ const Calc = ({ satNum }) => {
     if (satellites?.tle && satellites.tle.length === 2) {
       const [line1, line2] = satellites.tle;
       const data = cords(line1, line2);
+      isSatelliteInEclipse(line1, line2);
+
       dispatch(
         satCoordsUpdated({
           id: satNum,
@@ -166,12 +224,202 @@ const Calc = ({ satNum }) => {
     }
   };
 
+  const calculateSunPosition = (date = new Date()) => {
+    const jd = date.getTime() / 86400000.0 + 2440587.5; // Julian Date
+    const n = jd - 2451545.0; // Days since J2000.0
+    //console.log(date);
+    // Mean longitude of the Sun
+    const L = (280.46 + 0.9856474 * n) % 360;
+
+    // Mean anomaly of the Sun
+    const g = (357.528 + 0.9856003 * n) % 360;
+
+    // Ecliptic longitude of the Sun
+    const lambda =
+      L +
+      1.915 * Math.sin((g * Math.PI) / 180) +
+      0.02 * Math.sin((2 * g * Math.PI) / 180);
+
+    // Obliquity of the ecliptic
+    const epsilon = 23.439 - 0.0000004 * n;
+
+    // Right ascension of the Sun
+    const alpha =
+      (Math.atan2(
+        Math.cos((epsilon * Math.PI) / 180) *
+          Math.sin((lambda * Math.PI) / 180),
+        Math.cos((lambda * Math.PI) / 180)
+      ) *
+        180) /
+      Math.PI;
+
+    // Declination of the Sun
+    const delta =
+      (Math.asin(
+        Math.sin((epsilon * Math.PI) / 180) * Math.sin((lambda * Math.PI) / 180)
+      ) *
+        180) /
+      Math.PI;
+
+    const gmst = 18.697374558 + 24.06570982441908 * n;
+    const lst = (gmst + (observerGd.longitude * 180) / Math.PI / 15) % 24;
+
+    // Convert the right ascension to hours
+    const alphaHours = alpha / 15;
+
+    // Calculate the hour angle
+    const H = (lst - alphaHours) * 15;
+
+    // Convert the hour angle to radians
+    const Hrad = (H * Math.PI) / 180;
+
+    // Convert the declination to radians
+    const deltarad = (delta * Math.PI) / 180;
+
+    // Convert the observer's latitude to radians
+    const latrad = observerGd.latitude;
+    const alphaRad = (alpha * Math.PI) / 180;
+
+    // Distance from Earth to Sun in AU (Astronomical Units)
+    const distance =
+      1.00014 -
+      0.01671 * Math.cos((g * Math.PI) / 180) -
+      0.00014 * Math.cos((2 * g * Math.PI) / 180);
+
+    // Convert distance to kilometers
+    const distanceKm = distance * 149597870.7;
+
+    // Calculate Sun's position in ECI coordinates
+    const sunEci = {
+      x: distanceKm * Math.cos(deltarad) * Math.cos(alphaRad),
+      y: distanceKm * Math.cos(deltarad) * Math.sin(alphaRad),
+      z: distanceKm * Math.sin(deltarad),
+    };
+    // console.log(`Sun ECI: x=${sunEci.x}, y=${sunEci.y}, z=${sunEci.z}`);
+
+    // Calculate the elevation angle
+    const elevation =
+      (Math.asin(
+        Math.sin(latrad) * Math.sin(deltarad) +
+          Math.cos(latrad) * Math.cos(deltarad) * Math.cos(Hrad)
+      ) *
+        180) /
+      Math.PI;
+
+    // Calculate the azimuth angle
+    const azimuth =
+      (Math.acos(
+        (Math.sin(deltarad) * Math.cos(latrad) -
+          Math.cos(deltarad) * Math.sin(latrad) * Math.cos(Hrad)) /
+          Math.cos((elevation * Math.PI) / 180)
+      ) *
+        180) /
+      Math.PI;
+
+    // Adjust azimuth based on the hour angle
+    const adjustedAzimuth = H > 0 ? (360 - azimuth) % 360 : azimuth;
+    // console.log(`Azimuth: ${adjustedAzimuth.toFixed(2)} degrees`);
+    // console.log(`Elevation: ${elevation.toFixed(2)} degrees`);
+    // console.log(`Right Ascension: ${alpha.toFixed(2)} degrees`);
+    // console.log(`Declination: ${delta.toFixed(2)} degrees`);
+
+    return { alpha, delta, azimuth, elevation, sunEci };
+  };
+  const isSatelliteInEclipse = (line1, line2, date = new Date()) => {
+    const satrec = satellite.twoline2satrec(line1, line2);
+    const positionAndVelocity = satellite.propagate(satrec, date);
+    const positionEci = positionAndVelocity.position;
+
+    // Calculate the Sun's position in ECI coordinates
+    const sunEci = calculateSunPosition(date).sunEci;
+
+    // Calculate distances
+    const rhoE = Math.sqrt(
+      positionEci.x ** 2 + positionEci.y ** 2 + positionEci.z ** 2
+    );
+    const rhoS = Math.sqrt(
+      (sunEci.x - positionEci.x) ** 2 +
+        (sunEci.y - positionEci.y) ** 2 +
+        (sunEci.z - positionEci.z) ** 2
+    );
+    const rS = Math.sqrt(sunEci.x ** 2 + sunEci.y ** 2 + sunEci.z ** 2);
+
+    // Calculate semidiameters
+    const RE = 6378.137; // Earth's radius in km
+    const RS = 696340; // Sun's radius in km
+    const thetaE = Math.asin(RE / rhoE);
+    const thetaS = Math.asin(RS / rhoS);
+
+    // Calculate normalized vectors
+    const satToEarthVector = {
+      x: -positionEci.x / rhoE,
+      y: -positionEci.y / rhoE,
+      z: -positionEci.z / rhoE,
+    };
+
+    const satToSunVector = {
+      x: (sunEci.x - positionEci.x) / rhoS,
+      y: (sunEci.y - positionEci.y) / rhoS,
+      z: (sunEci.z - positionEci.z) / rhoS,
+    };
+
+    // Calculate the dot product
+    const dotProduct =
+      satToEarthVector.x * satToSunVector.x +
+      satToEarthVector.y * satToSunVector.y +
+      satToEarthVector.z * satToSunVector.z;
+    const theta = Math.acos(Math.max(-1, Math.min(1, dotProduct)));
+
+    //console.log(`theta: ${theta}`);
+    const isUmbral = thetaE > thetaS && theta < thetaE - thetaS;
+    const isPenumbral =
+      Math.abs(thetaE - thetaS) < theta && theta < thetaE + thetaS;
+
+    console.log(`isUmbral: ${isUmbral}, isPenumbral: ${isPenumbral}`);
+    return { isUmbral, isPenumbral };
+  };
+
+  const findEclipseTimes = () => {
+    if (satellites?.tle && satellites.tle.length === 2) {
+      const [line1, line2] = satellites.tle;
+      const results = [];
+      const startTime = new Date();
+      const endTime = new Date(startTime.getTime() + 2 * 60 * 60 * 1000); // 2 hours ahead
+      const stepSec = 10; // Check every 10 seconds
+
+      let lastEclipseState = false;
+      let currentTime = new Date(startTime);
+
+      while (currentTime <= endTime) {
+        const eclipseStatus = isSatelliteInEclipse(line1, line2, currentTime);
+        const currentEclipseState =
+          eclipseStatus.isUmbral || eclipseStatus.isPenumbral;
+
+        // Detect transition
+        if (currentEclipseState !== lastEclipseState) {
+          results.push({
+            time: new Date(currentTime),
+            type: currentEclipseState ? "sunset" : "sunrise",
+          });
+        }
+
+        lastEclipseState = currentEclipseState;
+        currentTime = new Date(currentTime.getTime() + stepSec * 1000);
+      }
+
+      // Log results
+      console.log(results);
+
+      return results;
+    }
+  };
   useEffect(() => {
-    Calcpass();
     CalcCoords();
-    const intervalId1 = setInterval(CalcCoords, 2000);
+    findEclipseTimes();
+    const intervalId1 = setInterval(CalcCoords, 1000);
     CalcPath();
-    const intervalId2 = setInterval(CalcPath, 5000);
+    const intervalId2 = setInterval(CalcPath, 50000);
+    Calcpass();
     return () => {
       clearInterval(intervalId2);
       clearInterval(intervalId1);
