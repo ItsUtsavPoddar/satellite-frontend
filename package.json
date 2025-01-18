@@ -4,9 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm install --legacy-peer-deps && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint"
+  },
+  "resolutions": {
+    "react-leaflet-night-region/react": "^18.2.0",
+    "react-leaflet-night-region/react-dom": "^18.2.0"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.4.0",
