@@ -57,7 +57,11 @@ export function Passes({ satelliteId }) {
                   {passes &&
                     passes.map((pass, index) => (
                       <TableRow key={index}>
-                        <TableCell>
+                        <TableCell
+                          className={`font-bold ${
+                            pass.isVisible ? "text-green-500" : "text-red-500"
+                          }`}
+                        >
                           {pass.isVisible ? "Visible" : "Not Visible"}
                         </TableCell>
                         <TableCell>

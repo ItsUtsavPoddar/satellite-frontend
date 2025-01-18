@@ -25,6 +25,7 @@
     "react-dom": "^18",
     "react-hook-form": "^7.51.4",
     "react-leaflet": "^4.2.1",
+    "react-leaflet-night-region": "^1.1.0",
     "react-redux": "^9.1.2",
     "satellite.js": "^5.0.0",
     "tailwind-merge": "^2.3.0",

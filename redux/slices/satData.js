@@ -9,10 +9,7 @@ const initialState = {
     coords: ["0", "0"],
     tle: " ",
     height: "0",
-    path: [
-      [[], []],
-      [[], []],
-    ],
+    path: [],
     color: "#FF003F",
     isEclipsed: false,
     passes: [],
@@ -51,9 +48,10 @@ const satData = createSlice({
     },
     satPathUpdated(state, action) {
       const { id, path } = action.payload;
-      if (state[id]) {
-        state[id].path = path;
-      }
+      state[id].path = path.map((segment) => ({
+        coords: segment.coords,
+        inShadow: segment.inShadow,
+      }));
     },
     satDel(state, action) {
       const { id } = action.payload;

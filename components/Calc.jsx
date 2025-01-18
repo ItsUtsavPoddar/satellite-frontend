@@ -8,6 +8,7 @@ import {
   satPassesUpdated,
   satRiseSetTimeUpdated,
 } from "@/redux/slices/satData";
+import { sunCoords } from "@/redux/slices/sunData";
 import { useEffect } from "react";
 const satellite = require("satellite.js");
 
@@ -71,7 +72,7 @@ const Calc = ({ satNum }) => {
     let visibilityStart = null;
     let hasBeenVisible = false;
     const endDate = new Date();
-    endDate.setDate(endDate.getDate() + 10);
+    endDate.setDate(endDate.getDate() + 15);
 
     for (
       let date = new Date();
@@ -176,25 +177,47 @@ const Calc = ({ satNum }) => {
 
     return passes;
   };
+
   const path = (line1, line2) => {
     const paths = [];
-    let currentPath = [];
+    let currentPath = {
+      coords: [],
+      inShadow: false,
+    };
     let date = new Date();
 
     for (let i = 0; i < 7200; i++) {
       const { long, lat } = getSatellitePosition(line1, line2, date);
+      const eclipseStatus = isSatelliteInEclipse(line1, line2, date);
+      const isInShadow = eclipseStatus.isUmbral || eclipseStatus.isPenumbral;
+
       if (long < -179 || long > 179) {
-        if (currentPath.length > 0) {
+        if (currentPath.coords.length > 0) {
           paths.push(currentPath);
-          currentPath = [];
+          currentPath = {
+            coords: [],
+            inShadow: isInShadow,
+          };
         }
       } else {
-        currentPath.push([lat, long]);
+        // If shadow status changes, start a new path segment
+        if (
+          currentPath.coords.length > 0 &&
+          isInShadow !== currentPath.inShadow
+        ) {
+          paths.push(currentPath);
+          currentPath = {
+            coords: [],
+            inShadow: isInShadow,
+          };
+        }
+        currentPath.coords.push([lat, long]);
+        currentPath.inShadow = isInShadow;
       }
       date = new Date(date.getTime() + 1000);
     }
 
-    if (currentPath.length > 0) {
+    if (currentPath.coords.length > 0) {
       paths.push(currentPath);
     }
 
@@ -230,6 +253,7 @@ const Calc = ({ satNum }) => {
     if (satellites?.tle && satellites.tle.length === 2) {
       const [line1, line2] = satellites.tle;
       const data = path(line1, line2);
+
       dispatch(
         satPathUpdated({
           id: satNum,
@@ -349,8 +373,14 @@ const Calc = ({ satNum }) => {
     // console.log(`Elevation: ${elevation.toFixed(2)} degrees`);
     // console.log(`Right Ascension: ${alpha.toFixed(2)} degrees`);
     // console.log(`Declination: ${delta.toFixed(2)} degrees`);
+    // Convert to longitude
+    let longitude = (alpha - gmst * 15) % 360;
+    if (longitude > 180) longitude -= 360;
+    if (longitude < -180) longitude += 360;
 
-    return { alpha, delta, azimuth, elevation, sunEci };
+    // Latitude is equal to declination
+    const latitude = delta;
+    return { alpha, delta, azimuth, elevation, sunEci, longitude, latitude };
   };
 
   const isSatelliteInEclipse = (line1, line2, date = new Date()) => {
@@ -447,18 +477,32 @@ const Calc = ({ satNum }) => {
     }
   };
 
+  const SunLatLong = () => {
+    const sunPosition = calculateSunPosition();
+
+    dispatch(
+      sunCoords({
+        latitude: sunPosition.latitude,
+        longitude: sunPosition.longitude,
+      })
+    );
+  };
+
   useEffect(() => {
-    CalcCoords();
-    const intervalId1 = setInterval(CalcCoords, 1000);
     CalcPath();
-    const intervalId2 = setInterval(CalcPath, 50000);
     RiseSetTimes();
+    SunLatLong();
+    const intervalId1 = setInterval(CalcCoords, 750);
+    const intervalId2 = setInterval(CalcPath, 60000);
     const intercalId3 = setInterval(RiseSetTimes, 3600000);
+    const intervalId4 = setInterval(SunLatLong, 60000);
+
     Calcpass();
     return () => {
       clearInterval(intervalId2);
       clearInterval(intervalId1);
       clearInterval(intercalId3);
+      clearInterval(intervalId4);
     };
   }, [satellites?.tle, user?.coordinates]);
 

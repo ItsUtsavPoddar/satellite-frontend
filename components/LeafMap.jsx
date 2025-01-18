@@ -10,23 +10,30 @@ import {
   CircleMarker,
 } from "react-leaflet";
 import { useSelector } from "react-redux";
-
+import { useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
 import "leaflet-defaulticon-compatibility";
-// import { NightRegion } from "react-leaflet-night-region";
+import { NightRegion } from "react-leaflet-night-region";
 
 const LeafMap = () => {
   const satellites = useSelector((state) => state.satDataReducer);
   const user = useSelector((state) => state.userDataReducer);
+  const sun = useSelector((state) => state.sunDataReducer);
   const icon = L.icon({
     iconUrl: "https://cdn-icons-png.flaticon.com/512/1209/1209255.png?w=360",
     iconSize: [22, 22],
     iconAnchor: [12, 12],
   });
   const icon_user = L.icon({
-    iconUrl: "https://cdn-icons-png.flaticon.com/512/16701/16701904.png",
-    iconSize: [18, 18],
+    iconUrl: "https://pngimg.com/d/gps_PNG13.png",
+    iconSize: [25, 25],
+    iconAnchor: [12, 12],
+  });
+  const icon_sun = L.icon({
+    iconUrl:
+      "https://www.nicepng.com/png/full/121-1215503_sun-icon-white-sun-blue-background.png",
+    iconSize: [20, 20],
     iconAnchor: [12, 12],
   });
 
@@ -49,14 +56,20 @@ const LeafMap = () => {
           url="https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
         />
 
-        {/* <NightRegion
-          fillColor="#00345c"
-          color="#001a2e"
-          refreshInterval={2000} 
-        /> */}
+        <NightRegion
+          fillColor="#000000"
+          color="#111111"
+          refreshInterval={2000}
+        />
         <Marker
           position={[user.coordinates.latitude, user.coordinates.longitude]}
           icon={icon_user}
+          autoPanOnFocus={false}
+          autoPan={false}
+        ></Marker>
+        <Marker
+          position={[sun.sunCoords.latitude, sun.sunCoords.longitude]}
+          icon={icon_sun}
           autoPanOnFocus={false}
           autoPan={false}
         ></Marker>
@@ -72,17 +85,19 @@ const LeafMap = () => {
                 Name: {sat.name} SatNum: {sat.id}
               </Popup>
             </Marker>
-            {sat.path.map((pathSegment, index) => (
-              <Polyline
-                key={index}
-                positions={pathSegment}
-                pathOptions={{
-                  color: sat.color,
-                  weight: 1.5,
-                }}
-                smoothFactor={2}
-              ></Polyline>
-            ))}
+            {sat.path &&
+              sat.path.length > 0 &&
+              sat.path.map((pathSegment, index) => (
+                <Polyline
+                  key={index}
+                  positions={pathSegment.coords || []}
+                  pathOptions={{
+                    color: pathSegment.inShadow ? `${sat.color}35` : sat.color,
+                    weight: 1.5,
+                  }}
+                  smoothFactor={2}
+                />
+              ))}
             <Circle
               center={[sat.coords[1], sat.coords[0]]}
               radius={800e3}
