@@ -125,7 +125,7 @@ const SatelliteTableCell = ({ sat }) => {
         )}
       </div>
       <br />
-      <br />
+
       {sat.riseSetTime && sat.riseSetTime.length > 0 ? (
         <>
           {(() => {
