@@ -8,7 +8,7 @@ const MostSearchedSatellite = () => {
     const fetchMostSearchedSatellite = async () => {
       try {
         const response = await axios.get(
-          "https://satellite-backend-production.up.railway.app/most-fetched"
+          "https://satellite-backend-v1.onrender.com/most-fetched"
         );
 
         setSatellite(response.data);
