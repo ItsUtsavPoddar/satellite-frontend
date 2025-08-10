@@ -49,7 +49,7 @@ const LeafMap = () => {
           [90, 180],
         ]}
         minZoom={1}
-        className="static w-full rounded-md shadow-sm h-112 md:h-96 lg:h-128"
+        className="fixed inset-0 z-0 h-screen w-screen"
       >
         <TileLayer
           //   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
