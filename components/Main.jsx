@@ -3,9 +3,10 @@ import FormSAT from "./FormSAT";
 // import LeafMap from "./LeafMap";
 import dynamic from "next/dynamic";
 import { Rnd } from "react-rnd";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 const STORAGE_KEY = "satellitePanelRect";
+const OPEN_KEY = "satellitePanelOpen";
 
 function clampRect(rect, vw, vh) {
   const minW = 360;
@@ -28,6 +29,98 @@ function loadRect() {
   return null;
 }
 
+function loadOpen() {
+  if (typeof window === "undefined") return true;
+  const raw = localStorage.getItem(OPEN_KEY);
+  if (raw === null) return true; // default open
+  return raw === "true";
+}
+
+// Simple pinch-zoom wrapper (two-finger only)
+function PinchZoom({ children }) {
+  const ref = useRef(null);
+  const [scale, setScale] = useState(1);
+  const pointers = useRef(new Map());
+  const start = useRef({ dist: 0, scaleAtStart: 1, origin: "50% 0%" });
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const onPointerDown = (e) => {
+      if (e.pointerType !== "touch") return;
+      el.setPointerCapture?.(e.pointerId);
+      pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    };
+
+    const onPointerMove = (e) => {
+      if (e.pointerType !== "touch") return;
+      if (!pointers.current.has(e.pointerId)) return;
+      pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+      if (pointers.current.size === 2) {
+        const pts = Array.from(pointers.current.values());
+        const dx = pts[0].x - pts[1].x;
+        const dy = pts[0].y - pts[1].y;
+        const dist = Math.hypot(dx, dy);
+
+        if (start.current.dist === 0) {
+          start.current.dist = dist;
+          start.current.scaleAtStart = scale;
+          // set transform-origin to midpoint between fingers relative to element
+          const rect = el.getBoundingClientRect();
+          const midX = (pts[0].x + pts[1].x) / 2 - rect.left;
+          const midY = (pts[0].y + pts[1].y) / 2 - rect.top;
+          const ox = `${(midX / rect.width) * 100}%`;
+          const oy = `${(midY / rect.height) * 100}%`;
+          start.current.origin = `${ox} ${oy}`;
+          el.style.transformOrigin = start.current.origin;
+        } else {
+          const factor = dist / start.current.dist;
+          const next = Math.max(
+            0.8,
+            Math.min(2, start.current.scaleAtStart * factor)
+          );
+          setScale(next);
+        }
+      }
+    };
+
+    const onPointerUp = (e) => {
+      if (e.pointerType !== "touch") return;
+      pointers.current.delete(e.pointerId);
+      if (pointers.current.size < 2) {
+        start.current.dist = 0;
+      }
+    };
+
+    // Important: allow two-finger gestures but keep single-finger scroll
+    // We avoid setting touch-action: none on the scroll container.
+    el.addEventListener("pointerdown", onPointerDown);
+    el.addEventListener("pointermove", onPointerMove);
+    el.addEventListener("pointerup", onPointerUp);
+    el.addEventListener("pointercancel", onPointerUp);
+
+    return () => {
+      el.removeEventListener("pointerdown", onPointerDown);
+      el.removeEventListener("pointermove", onPointerMove);
+      el.removeEventListener("pointerup", onPointerUp);
+      el.removeEventListener("pointercancel", onPointerUp);
+    };
+  }, [scale]);
+
+  return (
+    <div
+      ref={ref}
+      // Do NOT use touch-action: none here to preserve scrolling; browsers will still deliver two-pointer moves
+      style={{ transform: `scale(${scale})` }}
+      className="origin-top"
+    >
+      {children}
+    </div>
+  );
+}
+
 const Main = () => {
   const LeafMap = useMemo(
     () =>
@@ -39,6 +132,7 @@ const Main = () => {
   );
 
   const [mounted, setMounted] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   const [panel, setPanel] = useState({ x: 24, y: 96, width: 440, height: 640 });
 
   // Initialize from localStorage and viewport after mount
@@ -49,6 +143,7 @@ const Main = () => {
     const saved = loadRect();
     const initial = saved ?? { x: vw - 480, y: 96, width: 440, height: 640 };
     setPanel(clampRect(initial, vw, vh));
+    setIsOpen(loadOpen());
   }, []);
 
   // Persist helper
@@ -77,14 +172,39 @@ const Main = () => {
     return () => window.removeEventListener("resize", onResize);
   }, [mounted]);
 
+  // Listen for header toggle events + storage sync (so multiple tabs stay in sync)
+  useEffect(() => {
+    if (!mounted) return;
+    const onToggle = () => {
+      setIsOpen((prev) => {
+        const next = !prev;
+        try {
+          localStorage.setItem(OPEN_KEY, String(next));
+        } catch {}
+        return next;
+      });
+    };
+    const onStorage = (e) => {
+      if (e.key === OPEN_KEY && e.newValue != null) {
+        setIsOpen(e.newValue === "true");
+      }
+    };
+    window.addEventListener("satellite-panel:toggle", onToggle);
+    window.addEventListener("storage", onStorage);
+    return () => {
+      window.removeEventListener("satellite-panel:toggle", onToggle);
+      window.removeEventListener("storage", onStorage);
+    };
+  }, [mounted]);
+
   return (
     <div className="pt-20 pb-10 justify-center pr-0 gap-4 grid grid-cols-1 lg:grid-cols-6 sm:items-center">
       <div className="z-0 col-start-1 col-end-2 lg:col-start-1 lg:col-end-4">
         <LeafMap />
       </div>
 
-      {/* Render the movable/resizable widget only after mount to avoid SSR window access */}
-      {mounted && (
+      {/* Render the movable/resizable widget only after mount and if open */}
+      {mounted && isOpen && (
         <Rnd
           size={{ width: panel.width, height: panel.height }}
           position={{ x: panel.x, y: panel.y }}
@@ -99,11 +219,35 @@ const Main = () => {
           style={{ position: "fixed", zIndex: 20 }}
           enableUserSelectHack={false}
         >
-          <div className="h-full overflow-y-auto rounded-xl border border-white/15 bg-white/10 p-3 shadow-2xl backdrop-blur-md drag-handle">
-            {/* <div className="drag-handle mb-2 cursor-move select-none rounded-md border border-white/10 bg-white/10 px-3 py-2 text-sm font-medium text-white/80">
-              Satellites 
-            </div> */}
-            <FormSAT />
+          <div className="h-full overflow-hidden rounded-xl border border-white/15 bg-white/10 shadow-2xl backdrop-blur-md">
+            {/* Drag handle bar only (keeps content interactive) */}
+            <div className="drag-handle flex items-center justify-between gap-2 border-b border-white/10 bg-white/10 px-3 py-2 text-sm text-white/80 cursor-move select-none">
+              <span>Satellites</span>
+              {/* Local close button for convenience */}
+              <button
+                type="button"
+                onClick={() => {
+                  setIsOpen(false);
+                  try {
+                    localStorage.setItem(OPEN_KEY, "false");
+                  } catch {}
+                }}
+                className="rounded-md px-2 py-1 hover:bg-white/10"
+                aria-label="Close panel"
+                title="Close"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Scrollable + pinch-zoomable content */}
+            <div className="h-[calc(100%-40px)] overflow-y-auto p-2 sm:p-3">
+              <PinchZoom>
+                <div className="origin-top scale-[0.9] sm:scale-100">
+                  <FormSAT />
+                </div>
+              </PinchZoom>
+            </div>
           </div>
         </Rnd>
       )}
