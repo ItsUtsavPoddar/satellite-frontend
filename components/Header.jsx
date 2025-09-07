@@ -49,7 +49,7 @@ export default function Header() {
               <div className="grid gap-4 p-4 ">
                 <Link
                   className="hover:underline cursor-pointer"
-                  href="https://utsavpoddar.tech"
+                  href="https://utsv.tech"
                   target="blank"
                 >
                   Contact
