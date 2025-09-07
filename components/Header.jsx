@@ -26,7 +26,7 @@ export default function Header() {
           <Link
             className="hover:underline cursor-pointer"
             target="blank"
-            href="https://utsavpoddar.tech"
+            href="https://utsv.tech"
           >
             Contact
           </Link>
