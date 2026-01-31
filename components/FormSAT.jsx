@@ -19,33 +19,20 @@ import Calc from "./Calc";
 import { Passes } from "@/components/Passes";
 import MostSearchedSatellite from "./MostSearchedSatellite";
 
-// Color helpers
+// Professional color palette - bold greys and industrial tones
 const colors = [
-  "#FF5733",
-  "#33FF57",
-  "#3357FF",
-  "#FF33A1",
-  "#A133FF",
-  "#33FFF2",
-  "#F2FF33",
-  "#FF8C00",
-  "#FFD700",
-  "#ADFF2F",
-  "#00FF7F",
-  "#20B2AA",
-  "#00CED1",
-  "#1E90FF",
-  "#BA55D3",
-  "#FF69B4",
-  "#FF4500",
-  "#32CD32",
-  "#FFDAB9",
-  "#8A2BE2",
-  "#DC143C",
-  "#4B0082",
-  "#8B0000",
-  "#00FA9A",
-  "#4169E1",
+  "#9CA3AF", // Grey 400
+  "#6B7280", // Grey 500
+  "#4B5563", // Grey 600
+  "#374151", // Grey 700
+  "#1F2937", // Grey 800
+  "#60A5FA", // Blue 400
+  "#3B82F6", // Blue 500
+  "#2563EB", // Blue 600
+  "#8B5CF6", // Purple 500
+  "#6366F1", // Indigo 500
+  "#10B981", // Emerald 500
+  "#14B8A6", // Teal 500
 ];
 const getRandomColor = () => colors[Math.floor(Math.random() * colors.length)];
 
@@ -88,40 +75,28 @@ const SatelliteTableCell = ({ sat }) => {
 
   return (
     <TableCell className="text-[11px] sm:text-xs whitespace-nowrap align-top">
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1.5 text-zinc-400">
         {sat?.isEclipsed ? (
           <>
-            <svg
-              className="w-4 h-4 text-blue-300"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-            >
-              <path d="M12 3C7.03 3 3 7.03 3 12C3 16.97 7.03 21 12 21C16.97 21 21 16.97 21 12C21 11.54 20.96 11.08 20.9 10.64C19.92 12.01 18.32 13 16.5 13C13.47 13 11 10.53 11 7.5C11 5.68 11.99 4.08 13.36 3.1C12.92 3.04 12.46 3 12 3Z" />
-            </svg>
-            <span>Darkness</span>
+            <span className="inline-block w-3 h-3 rounded-full bg-zinc-700 border border-zinc-600"></span>
+            <span className="font-medium">Eclipse</span>
           </>
         ) : (
           <>
-            <svg
-              className="w-4 h-4 text-yellow-400"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-            >
-              <path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0 2c1.65 0 3 1.35 3 3s-1.35 3-3 3-3-1.35-3-3 1.35-3 3-3zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c.39.39 1.03.39 1.41 0l1.06-1.06z" />
-            </svg>
-            <span>Sunlight</span>
+            <span className="inline-block w-3 h-3 rounded-full bg-zinc-400 border border-zinc-300"></span>
+            <span className="font-medium">Sunlit</span>
           </>
         )}
       </div>
-      <div className="mt-1 text-[11px] sm:text-xs">
+      <div className="mt-1.5 text-[11px] sm:text-xs text-zinc-500">
         {nextTime ? (
           <>
             Next {sat?.isEclipsed ? "Sunrise" : "Sunset"}:
             <br />
-            {countdown}
+            <span className="font-mono text-zinc-400">{countdown}</span>
           </>
         ) : (
-          "No upcoming transitions"
+          "No data"
         )}
       </div>
     </TableCell>
@@ -180,7 +155,7 @@ const FormSAT = () => {
             : parseFloat(longitude),
         height:
           height.trim() === "" ? user.coordinates.height : parseFloat(height),
-      })
+      }),
     );
     setLatitude("");
     setLongitude("");
@@ -188,61 +163,60 @@ const FormSAT = () => {
   };
 
   return (
-    <div className="mx-auto">
+    <div className="mx-auto bg-zinc-950 p-6 rounded-lg border border-zinc-800">
       {/* Header block */}
-      <div className="text-center space-y-2 sm:space-y-3">
-        <p className="text-orange-300 text-[11px] sm:text-sm">
-          User Position: Lat = {user.coordinates.latitude} Long ={" "}
-          {user.coordinates.longitude} Height = {user.coordinates.height} km
+      <div className="space-y-3 mb-6">
+        <p className="text-zinc-400 text-xs font-mono border-l-2 border-zinc-700 pl-3">
+          Location: {user.coordinates.latitude.toFixed(4)}° /{" "}
+          {user.coordinates.longitude.toFixed(4)}° / {user.coordinates.height}m
         </p>
 
-        {/* Compact coordinate inputs */}
-        <div className="mt-1 sm:mt-2 mb-4 sm:mb-6 flex justify-center items-center gap-1.5">
+        {/* Coordinate inputs */}
+        <div className="flex justify-start items-center gap-2 border-l-2 border-zinc-700 pl-3">
           <Input
             onChange={(e) => setLatitude(e.target.value)}
-            className="w-16 h-7 px-1 text-[11px] text-black rounded-sm"
+            className="w-20 h-8 px-2 text-xs bg-zinc-900 border-zinc-800 text-zinc-100 rounded"
             id="latitude"
-            placeholder="Lat"
+            placeholder="Latitude"
             inputMode="decimal"
             type="number"
             value={latitude}
           />
           <Input
             onChange={(e) => setLongitude(e.target.value)}
-            className="w-16 h-7 px-1 text-[11px] text-black rounded-sm"
+            className="w-20 h-8 px-2 text-xs bg-zinc-900 border-zinc-800 text-zinc-100 rounded"
             id="longitude"
-            placeholder="Long"
+            placeholder="Longitude"
             inputMode="decimal"
             type="number"
             value={longitude}
           />
           <Input
             onChange={(e) => setHeight(e.target.value)}
-            className="w-16 h-7 px-1 text-[11px] text-black rounded-sm"
+            className="w-20 h-8 px-2 text-xs bg-zinc-900 border-zinc-800 text-zinc-100 rounded"
             id="height"
-            placeholder="Alt(km)"
+            placeholder="Height(m)"
             inputMode="decimal"
             type="number"
             value={height}
           />
           <Button
             onClick={handleUpdateCoordinates}
-            className="h-7 px-2 text-[11px] sm:text-xs text-white bg-[#4c0519] hover:bg-[#660924] rounded-sm"
+            className="h-8 px-3 text-xs text-zinc-100 bg-zinc-800 hover:bg-zinc-700 rounded border border-zinc-700"
             type="button"
           >
             Update
           </Button>
         </div>
 
-        <h1 className="text-xl sm:text-3xl font-bold pb-1 sm:pb-2">
-          Satellite Number
-        </h1>
-        <div className="text-cyan-300 text-[11px] sm:text-sm">
-          <MostSearchedSatellite />
+        <div className="pt-4 border-t border-zinc-800">
+          <h2 className="text-lg font-bold text-zinc-100 tracking-tight mb-1">
+            TRACK SATELLITE
+          </h2>
+          <div className="text-zinc-500 text-xs mb-2">
+            <MostSearchedSatellite />
+          </div>
         </div>
-        <p className="mt-1 sm:mt-2 text-gray-50 text-xs sm:text-sm">
-          View and manage your satellite numbers
-        </p>
       </div>
 
       {/* Add satellite */}
@@ -251,74 +225,102 @@ const FormSAT = () => {
           e.preventDefault();
           handleAddSatellite();
         }}
-        className="mt-2 flex justify-center gap-2"
+        className="mb-6 flex gap-2"
       >
         <Input
           onChange={(e) => setSatNumber(e.target.value)}
-          className="block w-40 sm:w-56 border-gray-300 text-sm sm:text-base py-1.5 px-2 rounded-md shadow-sm text-black"
+          className="block flex-1 bg-zinc-900 border-zinc-800 text-zinc-100 text-sm py-2 px-3 rounded"
           id="satellite-number"
           maxLength={5}
           pattern="[0-9]{5}"
-          placeholder="X X X X X"
+          placeholder="NORAD ID (5 digits)"
           type="text"
           value={satNumber}
         />
         <Button
           type="submit"
           disabled={!isValidSat}
-          className="w-auto rounded-md py-1.5 px-3 text-sm sm:text-base font-medium text-white shadow-sm bg-[#4c0519] hover:bg-[#660924] disabled:opacity-60 disabled:cursor-not-allowed"
+          className="rounded py-2 px-4 text-sm font-semibold text-zinc-100 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed border border-zinc-700"
         >
-          Add Satellite
+          Add
         </Button>
       </form>
 
-      {/* Table (scrolls horizontally on small screens) */}
-      <div className="pt-4 sm:pt-5 overflow-x-auto text-white -mx-2 sm:mx-0">
-        <Table className="min-w-[560px] text-[11px] sm:text-sm">
-          <TableHeader className="border-0 text-white text-[11px] sm:text-sm">
-            <TableRow className="border-0">
-              <TableHead className="whitespace-nowrap">Satellite</TableHead>
-              <TableHead className="whitespace-nowrap">Stats</TableHead>
-              <TableHead className="whitespace-nowrap">Coordinates</TableHead>
-              <TableHead className="whitespace-nowrap">isIlluminated</TableHead>
-              <TableHead className="whitespace-nowrap">Actions</TableHead>
+      {/* Table */}
+      <div className="overflow-x-auto -mx-6 px-6">
+        <Table className="min-w-[600px] text-xs">
+          <TableHeader className="border-b border-zinc-800">
+            <TableRow className="border-0 hover:bg-transparent">
+              <TableHead className="text-zinc-400 font-semibold uppercase tracking-wider">
+                Satellite
+              </TableHead>
+              <TableHead className="text-zinc-400 font-semibold uppercase tracking-wider">
+                Stats
+              </TableHead>
+              <TableHead className="text-zinc-400 font-semibold uppercase tracking-wider">
+                Coordinates
+              </TableHead>
+              <TableHead className="text-zinc-400 font-semibold uppercase tracking-wider">
+                Status
+              </TableHead>
+              <TableHead className="text-zinc-400 font-semibold uppercase tracking-wider">
+                Actions
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {Object.values(satellites).map((sat) => (
-              <TableRow key={sat.id}>
+              <TableRow
+                key={sat.id}
+                className="border-b border-zinc-900 hover:bg-zinc-900/50"
+              >
                 {/* Triggers calculations/data fetch */}
                 <Calc satNum={sat.id} />
                 <FetchSat satNum={sat.id} />
 
-                <TableCell className="text-[11px] sm:text-sm whitespace-nowrap align-top">
-                  [{sat.id}]
-                  <br />
-                  {sat.name}
+                <TableCell className="text-xs whitespace-nowrap align-top py-4">
+                  <div className="font-mono text-zinc-500 text-[10px] mb-1">
+                    [{sat.id}]
+                  </div>
+                  <div className="font-semibold text-zinc-200">{sat.name}</div>
                 </TableCell>
 
-                <TableCell className="text-white text-[11px] sm:text-xs whitespace-nowrap align-top">
-                  Height: {sat.height} km
-                  <br /> Azimuth: {sat.azimuth}°
-                  <br /> Elevation: {sat.elevation}°
-                  <br />
-                  Dist_2_Sat: {sat.rangeSat} km
+                <TableCell className="text-zinc-300 text-xs whitespace-nowrap align-top py-4 font-mono">
+                  <div className="space-y-0.5 text-[11px]">
+                    <div>
+                      <span className="text-zinc-500">ALT:</span> {sat.height}{" "}
+                      km
+                    </div>
+                    <div>
+                      <span className="text-zinc-500">AZI:</span> {sat.azimuth}°
+                    </div>
+                    <div>
+                      <span className="text-zinc-500">ELE:</span>{" "}
+                      {sat.elevation}°
+                    </div>
+                    <div>
+                      <span className="text-zinc-500">DST:</span> {sat.rangeSat}{" "}
+                      km
+                    </div>
+                  </div>
                 </TableCell>
 
-                <TableCell className="text-[11px] sm:text-xs whitespace-nowrap align-top">
-                  {sat.coords[0]}, {sat.coords[1]}
+                <TableCell className="text-xs whitespace-nowrap align-top py-4">
+                  <div className="font-mono text-zinc-400 text-[11px]">
+                    {Number(sat.coords[1])?.toFixed(4)}°
+                    <br />
+                    {Number(sat.coords[0])?.toFixed(4)}°
+                  </div>
                 </TableCell>
 
                 <SatelliteTableCell sat={sat} />
 
-                <TableCell className="align-top">
-                  <div className="flex items-center gap-2 -m-1.5">
+                <TableCell className="align-top py-4">
+                  <div className="flex flex-col gap-2">
                     <Passes satelliteId={sat.id} />
-                  </div>
-                  <div className="mt-2 flex items-center gap-2 -m-1.5">
                     <Button
                       onClick={() => handleDeleteSatellite(sat.id)}
-                      className="text-white bg-[#24050e] hover:bg-[#2d0a14] px-2 py-1 text-[11px] sm:text-xs"
+                      className="text-zinc-400 hover:text-red-400 bg-zinc-900 hover:bg-red-950 border border-zinc-800 hover:border-red-900 px-3 py-1.5 text-xs rounded transition-all"
                       type="button"
                     >
                       Delete

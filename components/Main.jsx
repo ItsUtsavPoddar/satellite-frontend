@@ -79,7 +79,7 @@ function PinchZoom({ children }) {
           const factor = dist / start.current.dist;
           const next = Math.max(
             0.8,
-            Math.min(2, start.current.scaleAtStart * factor)
+            Math.min(2, start.current.scaleAtStart * factor),
           );
           setScale(next);
         }
@@ -128,7 +128,7 @@ const Main = () => {
         loading: () => <p>A map is loading</p>,
         ssr: false,
       }),
-    []
+    [],
   );
 
   const [mounted, setMounted] = useState(false);
@@ -198,13 +198,15 @@ const Main = () => {
   }, [mounted]);
 
   return (
-    <div className="pt-20 pb-10 justify-center pr-0 gap-4 grid grid-cols-1 lg:grid-cols-6 sm:items-center">
-      <div className="z-0 col-start-1 col-end-2 lg:col-start-1 lg:col-end-4">
-        <LeafMap />
-      </div>
+    <div className="fixed inset-0 top-[80px]">
+      {mounted && (
+        <div className="absolute inset-0">
+          <LeafMap />
+        </div>
+      )}
 
-      {/* Render the movable/resizable widget only after mount and if open */}
-      {mounted && isOpen && (
+      {/* Always render FormSAT for data loading - prevents API recalls */}
+      {mounted && (
         <Rnd
           size={{ width: panel.width, height: panel.height }}
           position={{ x: panel.x, y: panel.y }}
@@ -216,13 +218,18 @@ const Main = () => {
           onResizeStop={(e, dir, ref, delta, pos) =>
             save({ width: ref.offsetWidth, height: ref.offsetHeight, ...pos })
           }
-          style={{ position: "fixed", zIndex: 20 }}
+          style={{
+            position: "fixed",
+            zIndex: 1001,
+            display: isOpen ? "block" : "none",
+          }}
           enableUserSelectHack={false}
+          disableDragging={false}
         >
-          <div className="h-full overflow-hidden rounded-xl border border-white/15 bg-white/10 shadow-2xl backdrop-blur-md">
+          <div className="h-full overflow-hidden rounded border border-zinc-800 bg-zinc-950">
             {/* Drag handle bar only (keeps content interactive) */}
-            <div className="drag-handle flex items-center justify-between gap-2 border-b border-white/10 bg-white/10 px-3 py-2 text-sm text-white/80 cursor-move select-none">
-              <span>Satellites</span>
+            <div className="drag-handle flex items-center justify-between gap-2 border-b border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 cursor-move select-none">
+              <span className="font-semibold">SATELLITES</span>
               {/* Local close button for convenience */}
               <button
                 type="button"
@@ -232,7 +239,7 @@ const Main = () => {
                     localStorage.setItem(OPEN_KEY, "false");
                   } catch {}
                 }}
-                className="rounded-md px-2 py-1 hover:bg-white/10"
+                className="rounded px-2 py-1 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100"
                 aria-label="Close panel"
                 title="Close"
               >

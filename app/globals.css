@@ -80,3 +80,20 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* Dark popups for Leaflet */
+.leaflet-popup-content-wrapper {
+  background-color: #09090b !important;
+  border: 1px solid #27272a !important;
+  color: #ffffff !important;
+  border-radius: 8px !important;
+}
+
+.leaflet-popup-tip {
+  background-color: #09090b !important;
+  border: 1px solid #27272a !important;
+}
+
+.custom-popup .leaflet-popup-content {
+  margin: 12px !important;
+}
