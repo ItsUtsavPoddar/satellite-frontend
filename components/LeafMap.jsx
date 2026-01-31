@@ -39,18 +39,29 @@ async function fetchElevation(lat, lng) {
 function DraggableUserMarker({ position, onPositionChange }) {
   const [markerPos, setMarkerPos] = useState(position);
   const markerRef = useRef(null);
+  const isDragging = useRef(false);
 
   useEffect(() => {
-    setMarkerPos(position);
+    // Only update marker position from props if not currently dragging
+    if (!isDragging.current) {
+      setMarkerPos(position);
+    }
   }, [position]);
 
   const eventHandlers = {
+    dragstart() {
+      isDragging.current = true;
+    },
     dragend() {
       const marker = markerRef.current;
       if (marker != null) {
         const newPos = marker.getLatLng();
         setMarkerPos([newPos.lat, newPos.lng]);
         onPositionChange(newPos.lat, newPos.lng);
+        // Reset dragging flag after a short delay to allow position update
+        setTimeout(() => {
+          isDragging.current = false;
+        }, 100);
       }
     },
   };
@@ -173,6 +184,16 @@ const LeafMap = () => {
   }, [dispatch, user.coordinates.latitude, user.coordinates.longitude]);
 
   const handleUserPositionChange = async (lat, lng) => {
+    // Dispatch immediately with current height, then update with fetched elevation
+    dispatch(
+      updateCoordinates({
+        latitude: parseFloat(lat.toFixed(6)),
+        longitude: parseFloat(lng.toFixed(6)),
+        height: 0, // Temporary value
+      }),
+    );
+
+    // Fetch elevation in background and update
     const elevation = await fetchElevation(lat, lng);
     dispatch(
       updateCoordinates({
