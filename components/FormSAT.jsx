@@ -195,7 +195,7 @@ const FormSAT = () => {
             onChange={(e) => setHeight(e.target.value)}
             className="w-20 h-8 px-2 text-xs bg-zinc-900 border-zinc-800 text-zinc-100 rounded"
             id="height"
-            placeholder="Height(m)"
+            placeholder="Height(km)"
             inputMode="decimal"
             type="number"
             value={height}

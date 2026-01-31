@@ -27,7 +27,8 @@ async function fetchElevation(lat, lng) {
     );
     const data = await response.json();
     if (data.results && data.results[0]) {
-      return Math.round(data.results[0].elevation); // elevation in meters
+      // Convert from meters to kilometers with 3 decimal precision
+      return parseFloat((data.results[0].elevation / 1000).toFixed(3));
     }
   } catch (error) {
     console.error("Error fetching elevation:", error);
@@ -35,37 +36,8 @@ async function fetchElevation(lat, lng) {
   return 0;
 }
 
-// Draggable user marker component
-function DraggableUserMarker({ position, onPositionChange }) {
-  const [markerPos, setMarkerPos] = useState(position);
-  const markerRef = useRef(null);
-  const isDragging = useRef(false);
-
-  useEffect(() => {
-    // Only update marker position from props if not currently dragging
-    if (!isDragging.current) {
-      setMarkerPos(position);
-    }
-  }, [position]);
-
-  const eventHandlers = {
-    dragstart() {
-      isDragging.current = true;
-    },
-    dragend() {
-      const marker = markerRef.current;
-      if (marker != null) {
-        const newPos = marker.getLatLng();
-        setMarkerPos([newPos.lat, newPos.lng]);
-        onPositionChange(newPos.lat, newPos.lng);
-        // Reset dragging flag after a short delay to allow position update
-        setTimeout(() => {
-          isDragging.current = false;
-        }, 100);
-      }
-    },
-  };
-
+// User marker component
+function UserMarker({ position }) {
   const icon_user = L.divIcon({
     className: "custom-user-marker",
     html: `
@@ -79,21 +51,15 @@ function DraggableUserMarker({ position, onPositionChange }) {
   });
 
   return (
-    <Marker
-      draggable={true}
-      eventHandlers={eventHandlers}
-      position={markerPos}
-      ref={markerRef}
-      icon={icon_user}
-    >
+    <Marker position={position} icon={icon_user}>
       <Popup className="custom-popup">
         <div className="text-center font-medium">
           <div className="text-zinc-100 font-bold">Your Location</div>
           <div className="text-xs text-zinc-400 mt-1">
-            {markerPos[0].toFixed(4)}°, {markerPos[1].toFixed(4)}°
+            {position[0].toFixed(4)}°, {position[1].toFixed(4)}°
           </div>
           <div className="text-xs text-zinc-500 mt-1">
-            Drag to change location
+            Double-click map to change
           </div>
         </div>
       </Popup>
@@ -151,6 +117,16 @@ function GeolocationButton() {
   );
 }
 
+// Component to handle map double-click
+function MapClickHandler({ onDoubleClick }) {
+  useMapEvents({
+    dblclick(e) {
+      onDoubleClick(e.latlng.lat, e.latlng.lng);
+    },
+  });
+  return null;
+}
+
 const LeafMap = () => {
   const satellites = useSelector((state) => state.satDataReducer);
   const user = useSelector((state) => state.userDataReducer);
@@ -183,25 +159,26 @@ const LeafMap = () => {
     }
   }, [dispatch, user.coordinates.latitude, user.coordinates.longitude]);
 
-  const handleUserPositionChange = async (lat, lng) => {
-    // Dispatch immediately with current height, then update with fetched elevation
+  const handleUserPositionChange = (lat, lng) => {
+    // Update coordinates immediately
     dispatch(
       updateCoordinates({
         latitude: parseFloat(lat.toFixed(6)),
         longitude: parseFloat(lng.toFixed(6)),
-        height: 0, // Temporary value
+        height: 0,
       }),
     );
 
-    // Fetch elevation in background and update
-    const elevation = await fetchElevation(lat, lng);
-    dispatch(
-      updateCoordinates({
-        latitude: parseFloat(lat.toFixed(6)),
-        longitude: parseFloat(lng.toFixed(6)),
-        height: elevation,
-      }),
-    );
+    // Fetch elevation in background without blocking
+    fetchElevation(lat, lng).then((elevation) => {
+      dispatch(
+        updateCoordinates({
+          latitude: parseFloat(lat.toFixed(6)),
+          longitude: parseFloat(lng.toFixed(6)),
+          height: elevation,
+        }),
+      );
+    });
   };
 
   // Create dynamic satellite icon based on color
@@ -261,10 +238,11 @@ const LeafMap = () => {
           refreshInterval={2000}
         />
 
-        <DraggableUserMarker
+        <UserMarker
           position={[user.coordinates.latitude, user.coordinates.longitude]}
-          onPositionChange={handleUserPositionChange}
         />
+
+        <MapClickHandler onDoubleClick={handleUserPositionChange} />
 
         <GeolocationButton />
 

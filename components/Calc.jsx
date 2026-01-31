@@ -28,7 +28,7 @@ const Calc = ({ satNum }) => {
     const gmst = satellite.gstime(date);
     const positionGd = satellite.eciToGeodetic(
       positionAndVelocity.position,
-      gmst
+      gmst,
     );
     const positionEcf = satellite.eciToEcf(positionAndVelocity.position, gmst);
     const long = satellite.degreesLong(positionGd.longitude);
@@ -238,13 +238,13 @@ const Calc = ({ satNum }) => {
           azimuth: data[3].toFixed(2),
           elevation: data[4].toFixed(2),
           rangeSat: data[5].toFixed(2),
-        })
+        }),
       );
       dispatch(
         satIsEclipsed({
           id: satNum,
           isEclipsed: isEclipsed,
-        })
+        }),
       );
     }
   };
@@ -258,7 +258,7 @@ const Calc = ({ satNum }) => {
         satPathUpdated({
           id: satNum,
           path: data,
-        })
+        }),
       );
     }
   };
@@ -270,7 +270,7 @@ const Calc = ({ satNum }) => {
         satPassesUpdated({
           id: satNum,
           passes: data,
-        })
+        }),
       );
     }
   };
@@ -299,7 +299,7 @@ const Calc = ({ satNum }) => {
       (Math.atan2(
         Math.cos((epsilon * Math.PI) / 180) *
           Math.sin((lambda * Math.PI) / 180),
-        Math.cos((lambda * Math.PI) / 180)
+        Math.cos((lambda * Math.PI) / 180),
       ) *
         180) /
       Math.PI;
@@ -307,7 +307,8 @@ const Calc = ({ satNum }) => {
     // Declination of the Sun
     const delta =
       (Math.asin(
-        Math.sin((epsilon * Math.PI) / 180) * Math.sin((lambda * Math.PI) / 180)
+        Math.sin((epsilon * Math.PI) / 180) *
+          Math.sin((lambda * Math.PI) / 180),
       ) *
         180) /
       Math.PI;
@@ -352,7 +353,7 @@ const Calc = ({ satNum }) => {
     const elevation =
       (Math.asin(
         Math.sin(latrad) * Math.sin(deltarad) +
-          Math.cos(latrad) * Math.cos(deltarad) * Math.cos(Hrad)
+          Math.cos(latrad) * Math.cos(deltarad) * Math.cos(Hrad),
       ) *
         180) /
       Math.PI;
@@ -362,7 +363,7 @@ const Calc = ({ satNum }) => {
       (Math.acos(
         (Math.sin(deltarad) * Math.cos(latrad) -
           Math.cos(deltarad) * Math.sin(latrad) * Math.cos(Hrad)) /
-          Math.cos((elevation * Math.PI) / 180)
+          Math.cos((elevation * Math.PI) / 180),
       ) *
         180) /
       Math.PI;
@@ -393,12 +394,12 @@ const Calc = ({ satNum }) => {
 
     // Calculate distances
     const rhoE = Math.sqrt(
-      positionEci.x ** 2 + positionEci.y ** 2 + positionEci.z ** 2
+      positionEci.x ** 2 + positionEci.y ** 2 + positionEci.z ** 2,
     );
     const rhoS = Math.sqrt(
       (sunEci.x - positionEci.x) ** 2 +
         (sunEci.y - positionEci.y) ** 2 +
-        (sunEci.z - positionEci.z) ** 2
+        (sunEci.z - positionEci.z) ** 2,
     );
     const rS = Math.sqrt(sunEci.x ** 2 + sunEci.y ** 2 + sunEci.z ** 2);
 
@@ -469,7 +470,7 @@ const Calc = ({ satNum }) => {
         satRiseSetTimeUpdated({
           id: satNum,
           riseSetTime: results,
-        })
+        }),
       );
 
       //console.log(results);
@@ -484,7 +485,7 @@ const Calc = ({ satNum }) => {
       sunCoords({
         latitude: sunPosition.latitude,
         longitude: sunPosition.longitude,
-      })
+      }),
     );
   };
 
@@ -497,7 +498,6 @@ const Calc = ({ satNum }) => {
     const intercalId3 = setInterval(RiseSetTimes, 3600000);
     const intervalId4 = setInterval(SunLatLong, 60000);
 
-    Calcpass();
     return () => {
       clearInterval(intervalId2);
       clearInterval(intervalId1);
@@ -505,6 +505,16 @@ const Calc = ({ satNum }) => {
       clearInterval(intervalId4);
     };
   }, [satellites?.tle, user?.coordinates]);
+
+  // Calculate passes only after height/altitude is available
+  useEffect(() => {
+    if (
+      user?.coordinates?.height !== undefined &&
+      user?.coordinates?.height !== 0
+    ) {
+      Calcpass();
+    }
+  }, [satellites?.tle, user?.coordinates?.height]);
 
   return;
 };
