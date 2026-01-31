@@ -25,7 +25,7 @@ const FetchSat = ({ satNum }) => {
     try {
       const [tleResponse] = await Promise.all([
         axios.get(
-          `https://satellite-backend-v1.onrender.com/${satNum}`
+          `https://satellite-backend-lo09.onrender.com/${satNum}`
         ),
       ]);
 
