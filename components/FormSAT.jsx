@@ -172,10 +172,10 @@ const FormSAT = () => {
         </p>
 
         {/* Coordinate inputs */}
-        <div className="flex justify-start items-center gap-2 border-l-2 border-zinc-700 pl-3">
+        <div className="flex flex-wrap justify-start items-center gap-2 border-l-2 border-zinc-700 pl-3">
           <Input
             onChange={(e) => setLatitude(e.target.value)}
-            className="w-24 h-8 px-2 text-xs bg-zinc-900 border-zinc-800 text-zinc-100 rounded"
+            className="w-20 sm:w-24 h-8 px-2 text-xs bg-zinc-900 border-zinc-800 text-zinc-100 rounded"
             id="latitude"
             placeholder="Latitude"
             inputMode="decimal"
@@ -184,7 +184,7 @@ const FormSAT = () => {
           />
           <Input
             onChange={(e) => setLongitude(e.target.value)}
-            className="w-24 h-8 px-2 text-xs bg-zinc-900 border-zinc-800 text-zinc-100 rounded"
+            className="w-20 sm:w-24 h-8 px-2 text-xs bg-zinc-900 border-zinc-800 text-zinc-100 rounded"
             id="longitude"
             placeholder="Longitude"
             inputMode="decimal"
@@ -193,7 +193,7 @@ const FormSAT = () => {
           />
           <Input
             onChange={(e) => setHeight(e.target.value)}
-            className="w-28 h-8 px-2 text-xs bg-zinc-900 border-zinc-800 text-zinc-100 rounded"
+            className="w-24 sm:w-28 h-8 px-2 text-xs bg-zinc-900 border-zinc-800 text-zinc-100 rounded"
             id="height"
             placeholder="Height(km)"
             inputMode="decimal"
@@ -202,7 +202,7 @@ const FormSAT = () => {
           />
           <Button
             onClick={handleUpdateCoordinates}
-            className="h-8 px-3 text-xs text-zinc-100 bg-zinc-800 hover:bg-zinc-700 rounded border border-zinc-700"
+            className="h-8 px-3 text-xs text-zinc-100 bg-zinc-800 hover:bg-zinc-700 rounded border border-zinc-700 whitespace-nowrap"
             type="button"
           >
             Update

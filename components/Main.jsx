@@ -152,6 +152,9 @@ const Main = () => {
       width: defaultWidth,
       height: 640,
     };
+dth,
+      height: 640,
+    };
     setPanel(clampRect(initial, vw, vh));
     setIsOpen(loadOpen());
   }, []);
