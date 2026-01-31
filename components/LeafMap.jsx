@@ -218,6 +218,7 @@ const LeafMap = () => {
         ]}
         zoom={3}
         scrollWheelZoom={true}
+        doubleClickZoom={false}
         worldCopyJump={true}
         maxBounds={[
           [-90, -180],
