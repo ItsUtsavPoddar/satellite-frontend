@@ -11,7 +11,9 @@ const OPEN_KEY = "satellitePanelOpen";
 function clampRect(rect, vw, vh) {
   const minW = 360;
   const minH = 360;
-  const width = Math.max(minW, Math.min(rect.width ?? 440, vw));
+  // On mobile (< 640px), limit panel to 90% of viewport width
+  const maxWidth = vw < 640 ? Math.floor(vw * 0.9) : vw;
+  const width = Math.max(minW, Math.min(rect.width ?? 440, maxWidth));
   const height = Math.max(minH, Math.min(rect.height ?? 640, vh));
   const x = Math.max(0, Math.min(rect.x ?? 24, vw - width));
   const y = Math.max(0, Math.min(rect.y ?? 96, vh - height));
@@ -141,7 +143,15 @@ const Main = () => {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const saved = loadRect();
-    const initial = saved ?? { x: vw - 480, y: 96, width: 440, height: 640 };
+    // On mobile, start with smaller panel centered, on desktop start at right
+    const defaultWidth = vw < 640 ? Math.floor(vw * 0.9) : 440;
+    const defaultX = vw < 640 ? Math.floor(vw * 0.05) : vw - 480;
+    const initial = saved ?? {
+      x: defaultX,
+      y: 96,
+      width: defaultWidth,
+      height: 640,
+    };
     setPanel(clampRect(initial, vw, vh));
     setIsOpen(loadOpen());
   }, []);
@@ -227,32 +237,15 @@ const Main = () => {
           disableDragging={false}
         >
           <div className="h-full overflow-hidden rounded border border-zinc-800 bg-zinc-950">
-            {/* Drag handle bar only (keeps content interactive) */}
+            {/* Drag handle bar */}
             <div className="drag-handle flex items-center justify-between gap-2 border-b border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 cursor-move select-none">
               <span className="font-semibold">SATELLITES</span>
-              {/* Local close button for convenience */}
-              <button
-                type="button"
-                onClick={() => {
-                  setIsOpen(false);
-                  try {
-                    localStorage.setItem(OPEN_KEY, "false");
-                  } catch {}
-                }}
-                className="rounded px-2 py-1 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100"
-                aria-label="Close panel"
-                title="Close"
-              >
-                ✕
-              </button>
             </div>
 
             {/* Scrollable + pinch-zoomable content */}
-            <div className="h-[calc(100%-40px)] overflow-y-auto p-2 sm:p-3">
+            <div className="h-[calc(100%-40px)] overflow-y-auto overflow-x-hidden">
               <PinchZoom>
-                <div className="origin-top scale-[0.9] sm:scale-100">
-                  <FormSAT />
-                </div>
+                <FormSAT />
               </PinchZoom>
             </div>
           </div>

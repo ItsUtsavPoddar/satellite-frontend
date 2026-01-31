@@ -5,7 +5,7 @@ import Link from "next/link";
 import {
   Satellite,
   Menu,
-  MapPin,
+  PanelLeft,
   Orbit,
   Radio,
   Github,
@@ -82,14 +82,16 @@ export default function Header() {
 
             {/* Actions */}
             <div className="flex items-center gap-3">
+              {/* Toggle Panel Button - Always visible */}
               <button
                 type="button"
                 onClick={togglePanel}
-                className="hidden lg:flex px-3 py-2 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 rounded transition-all items-center"
+                className="flex items-center px-3 py-2 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 rounded transition-all"
                 aria-label="Toggle satellite panel"
+                title="Toggle Panel"
               >
-                <MapPin className="inline-block w-4 h-4 mr-2" />
-                <span>Toggle Panel</span>
+                <PanelLeft className="inline-block w-4 h-4 mr-2" />
+                <span className="inline">Toggle Panel</span>
               </button>
 
               {/* Mobile Menu */}
@@ -133,13 +135,6 @@ export default function Header() {
                         <Github className="w-5 h-5" />
                         <span className="font-medium">GitHub</span>
                       </a>
-                      <button
-                        onClick={togglePanel}
-                        className="flex items-center gap-3 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 transition-colors py-3 px-4 rounded"
-                      >
-                        <MapPin className="w-5 h-5" />
-                        <span className="font-medium">Toggle Panel</span>
-                      </button>
                     </nav>
                   </div>
                 </SheetContent>

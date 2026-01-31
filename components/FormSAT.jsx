@@ -163,19 +163,19 @@ const FormSAT = () => {
   };
 
   return (
-    <div className="mx-auto bg-zinc-950 p-6 rounded-lg border border-zinc-800">
+    <div className="bg-zinc-950 p-4 pb-0">
       {/* Header block */}
-      <div className="space-y-3 mb-6">
+      <div className="space-y-3 mb-4">
         <p className="text-zinc-400 text-xs font-mono border-l-2 border-zinc-700 pl-3">
           Location: {user.coordinates.latitude.toFixed(4)}° /{" "}
-          {user.coordinates.longitude.toFixed(4)}° / {user.coordinates.height}m
+          {user.coordinates.longitude.toFixed(4)}° / {user.coordinates.height}km
         </p>
 
         {/* Coordinate inputs */}
         <div className="flex justify-start items-center gap-2 border-l-2 border-zinc-700 pl-3">
           <Input
             onChange={(e) => setLatitude(e.target.value)}
-            className="w-20 h-8 px-2 text-xs bg-zinc-900 border-zinc-800 text-zinc-100 rounded"
+            className="w-24 h-8 px-2 text-xs bg-zinc-900 border-zinc-800 text-zinc-100 rounded"
             id="latitude"
             placeholder="Latitude"
             inputMode="decimal"
@@ -184,7 +184,7 @@ const FormSAT = () => {
           />
           <Input
             onChange={(e) => setLongitude(e.target.value)}
-            className="w-20 h-8 px-2 text-xs bg-zinc-900 border-zinc-800 text-zinc-100 rounded"
+            className="w-24 h-8 px-2 text-xs bg-zinc-900 border-zinc-800 text-zinc-100 rounded"
             id="longitude"
             placeholder="Longitude"
             inputMode="decimal"
@@ -193,7 +193,7 @@ const FormSAT = () => {
           />
           <Input
             onChange={(e) => setHeight(e.target.value)}
-            className="w-20 h-8 px-2 text-xs bg-zinc-900 border-zinc-800 text-zinc-100 rounded"
+            className="w-28 h-8 px-2 text-xs bg-zinc-900 border-zinc-800 text-zinc-100 rounded"
             id="height"
             placeholder="Height(km)"
             inputMode="decimal"
@@ -209,7 +209,7 @@ const FormSAT = () => {
           </Button>
         </div>
 
-        <div className="pt-4 border-t border-zinc-800">
+        <div className="pt-3 border-t border-zinc-800">
           <h2 className="text-lg font-bold text-zinc-100 tracking-tight mb-1">
             TRACK SATELLITE
           </h2>
@@ -225,7 +225,7 @@ const FormSAT = () => {
           e.preventDefault();
           handleAddSatellite();
         }}
-        className="mb-6 flex gap-2"
+        className="mb-4 flex gap-2"
       >
         <Input
           onChange={(e) => setSatNumber(e.target.value)}
@@ -247,8 +247,8 @@ const FormSAT = () => {
       </form>
 
       {/* Table */}
-      <div className="overflow-x-auto -mx-6 px-6">
-        <Table className="min-w-[600px] text-xs">
+      <div className="overflow-visible">
+        <Table className="w-full text-xs">
           <TableHeader className="border-b border-zinc-800">
             <TableRow className="border-0 hover:bg-transparent">
               <TableHead className="text-zinc-400 font-semibold uppercase tracking-wider">
