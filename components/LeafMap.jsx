@@ -17,7 +17,23 @@ import "leaflet/dist/leaflet.css";
 import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
 import "leaflet-defaulticon-compatibility";
 import { NightRegion } from "react-leaflet-night-region";
-import { MapPin, Locate } from "lucide-react";
+import { MapPin, Locate, Loader2 } from "lucide-react";
+
+// Fetch elevation from coordinates using Open-Elevation API
+async function fetchElevation(lat, lng) {
+  try {
+    const response = await fetch(
+      `https://api.open-elevation.com/api/v1/lookup?locations=${lat},${lng}`,
+    );
+    const data = await response.json();
+    if (data.results && data.results[0]) {
+      return Math.round(data.results[0].elevation); // elevation in meters
+    }
+  } catch (error) {
+    console.error("Error fetching elevation:", error);
+  }
+  return 0;
+}
 
 // Draggable user marker component
 function DraggableUserMarker({ position, onPositionChange }) {
@@ -88,13 +104,17 @@ function GeolocationButton() {
   useMapEvents({
     locationfound(e) {
       setLocating(false);
-      dispatch(
-        updateCoordinates({
-          latitude: parseFloat(e.latlng.lat.toFixed(6)),
-          longitude: parseFloat(e.latlng.lng.toFixed(6)),
-          height: 0,
-        }),
-      );
+      const lat = parseFloat(e.latlng.lat.toFixed(6));
+      const lng = parseFloat(e.latlng.lng.toFixed(6));
+      fetchElevation(lat, lng).then((elevation) => {
+        dispatch(
+          updateCoordinates({
+            latitude: lat,
+            longitude: lng,
+            height: elevation,
+          }),
+        );
+      });
     },
     locationerror() {
       setLocating(false);
@@ -111,7 +131,11 @@ function GeolocationButton() {
       className="leaflet-control-custom fixed bottom-24 right-4 z-[1000] bg-zinc-900 border border-zinc-700 hover:border-zinc-600 text-zinc-400 hover:text-zinc-100 p-3 rounded transition-all disabled:opacity-50 disabled:cursor-not-allowed"
       title="Detect my location"
     >
-      <Locate className={`h-5 w-5 ${locating ? "animate-pulse" : ""}`} />
+      {locating ? (
+        <Loader2 className="h-5 w-5 animate-spin" />
+      ) : (
+        <Locate className="h-5 w-5" />
+      )}
     </button>
   );
 }
@@ -128,12 +152,15 @@ const LeafMap = () => {
       // Check if user has default coordinates (likely not set yet)
       if (user.coordinates.latitude === 0 && user.coordinates.longitude === 0) {
         navigator.geolocation.getCurrentPosition(
-          (position) => {
+          async (position) => {
+            const lat = parseFloat(position.coords.latitude.toFixed(6));
+            const lng = parseFloat(position.coords.longitude.toFixed(6));
+            const elevation = await fetchElevation(lat, lng);
             dispatch(
               updateCoordinates({
-                latitude: parseFloat(position.coords.latitude.toFixed(6)),
-                longitude: parseFloat(position.coords.longitude.toFixed(6)),
-                height: 0,
+                latitude: lat,
+                longitude: lng,
+                height: elevation,
               }),
             );
           },
@@ -145,12 +172,13 @@ const LeafMap = () => {
     }
   }, [dispatch, user.coordinates.latitude, user.coordinates.longitude]);
 
-  const handleUserPositionChange = (lat, lng) => {
+  const handleUserPositionChange = async (lat, lng) => {
+    const elevation = await fetchElevation(lat, lng);
     dispatch(
       updateCoordinates({
         latitude: parseFloat(lat.toFixed(6)),
         longitude: parseFloat(lng.toFixed(6)),
-        height: user.coordinates.height,
+        height: elevation,
       }),
     );
   };

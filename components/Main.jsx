@@ -198,7 +198,7 @@ const Main = () => {
   }, [mounted]);
 
   return (
-    <div className="fixed inset-0 top-[80px]">
+    <div className="fixed inset-0 top-[56px]">
       {mounted && (
         <div className="absolute inset-0">
           <LeafMap />
