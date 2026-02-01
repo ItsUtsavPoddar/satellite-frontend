@@ -561,7 +561,12 @@ const Calc = ({ satNum }) => {
     ) {
       Calcpass();
     }
-  }, [satellites?.tle, user?.coordinates?.height]);
+  }, [
+    satellites?.tle,
+    user?.coordinates?.height,
+    user?.coordinates?.latitude,
+    user?.coordinates?.longitude,
+  ]);
 
   return null;
 };
