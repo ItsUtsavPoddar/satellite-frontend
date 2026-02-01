@@ -31,8 +31,9 @@ const FetchSat = ({ satNum }) => {
     setHasFetched(true);
 
     try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081';
       const [tleResponse] = await Promise.all([
-        axios.get(`http://localhost:8081/${satNum}`),
+        axios.get(`${apiUrl}/${satNum}`),
       ]);
 
       const tleData = tleResponse.data.tleString;
