@@ -16,6 +16,12 @@ const Calc = ({ satNum }) => {
   const dispatch = useDispatch();
   const satellites = useSelector((state) => state.satDataReducer[satNum]);
   const user = useSelector((state) => state.userDataReducer);
+
+  // Get epoch date from satellite data
+  const epochDate = satellites?.epochDate
+    ? new Date(satellites.epochDate)
+    : new Date();
+
   const observerGd = {
     longitude: satellite.degreesToRadians(user?.coordinates?.longitude || 0),
     latitude: satellite.degreesToRadians(user?.coordinates?.latitude || 0),
@@ -24,7 +30,26 @@ const Calc = ({ satNum }) => {
 
   const getSatellitePosition = (line1, line2, date = new Date()) => {
     const satrec = satellite.twoline2satrec(line1, line2); //Initializing the satellite record with the TLE (line 1 and line 2)
-    const positionAndVelocity = satellite.propagate(satrec, date);
+
+    // Check if satrec was created successfully
+    if (satrec.error) {
+      return null;
+    }
+
+    let positionAndVelocity = satellite.propagate(satrec, date);
+
+    // If propagation failed with current date, try with epoch date
+    if (!positionAndVelocity.position) {
+      positionAndVelocity = satellite.propagate(satrec, epochDate);
+
+      if (!positionAndVelocity.position) {
+        return null;
+      }
+
+      // Use epoch date for calculations if current date failed
+      date = epochDate;
+    }
+
     const gmst = satellite.gstime(date);
     const positionGd = satellite.eciToGeodetic(
       positionAndVelocity.position,
@@ -57,11 +82,13 @@ const Calc = ({ satNum }) => {
   const cords = (line1, line2) => {
     // Return some default value or handle the error appropriately already handled when fething still a fallback
     if (!line1 || !line2) {
-      console.error("TLE data is missing:", line1, line2);
-      return [0, 0, 0];
+      return null;
     }
-    const { long, lat, height, azimuth, elevation, rangeSat } =
-      getSatellitePosition(line1, line2);
+    const position = getSatellitePosition(line1, line2);
+    if (!position) {
+      return null;
+    }
+    const { long, lat, height, azimuth, elevation, rangeSat } = position;
     return [long, lat, height, azimuth, elevation, rangeSat];
   };
 
@@ -79,7 +106,11 @@ const Calc = ({ satNum }) => {
       date <= endDate;
       date.setSeconds(date.getSeconds() + 10)
     ) {
-      const { positionEcf } = getSatellitePosition(line1, line2, date);
+      const position = getSatellitePosition(line1, line2, date);
+      if (!position) {
+        return [];
+      }
+      const { positionEcf } = position;
       const lookAngles = satellite.ecfToLookAngles(observerCoords, positionEcf);
       const azimuth = satellite.radiansToDegrees(lookAngles.azimuth);
       const elevation = satellite.radiansToDegrees(lookAngles.elevation);
@@ -184,10 +215,15 @@ const Calc = ({ satNum }) => {
       coords: [],
       inShadow: false,
     };
-    let date = new Date();
+    let date = new Date(); // Start from current date
 
     for (let i = 0; i < 7200; i++) {
-      const { long, lat } = getSatellitePosition(line1, line2, date);
+      const position = getSatellitePosition(line1, line2, date);
+      if (!position) {
+        return [];
+      }
+
+      const { long, lat } = position;
       const eclipseStatus = isSatelliteInEclipse(line1, line2, date);
       const isInShadow = eclipseStatus.isUmbral || eclipseStatus.isPenumbral;
 
@@ -225,9 +261,15 @@ const Calc = ({ satNum }) => {
   };
 
   const CalcCoords = () => {
-    if (satellites?.tle && satellites.tle.length === 2) {
+    if (satellites?.tle && satellites.tle.length >= 2) {
       const [line1, line2] = satellites.tle;
       const data = cords(line1, line2);
+
+      // Skip update if propagation failed
+      if (!data) {
+        return;
+      }
+
       const data2 = isSatelliteInEclipse(line1, line2);
       const isEclipsed = data2.isUmbral || data2.isPenumbral;
       dispatch(
@@ -250,7 +292,7 @@ const Calc = ({ satNum }) => {
   };
 
   const CalcPath = () => {
-    if (satellites?.tle && satellites.tle.length === 2) {
+    if (satellites?.tle && satellites.tle.length >= 2) {
       const [line1, line2] = satellites.tle;
       const data = path(line1, line2);
 
@@ -264,7 +306,7 @@ const Calc = ({ satNum }) => {
   };
 
   const Calcpass = () => {
-    if (satellites?.tle && satellites.tle.length === 2) {
+    if (satellites?.tle && satellites.tle.length >= 2) {
       const data = passes(satellites.tle[0], satellites.tle[1], observerGd);
       dispatch(
         satPassesUpdated({
@@ -389,6 +431,11 @@ const Calc = ({ satNum }) => {
     const positionAndVelocity = satellite.propagate(satrec, date);
     const positionEci = positionAndVelocity.position;
 
+    // Check if propagation succeeded
+    if (!positionEci) {
+      return { isUmbral: false, isPenumbral: false };
+    }
+
     // Calculate the Sun's position in ECI coordinates
     const sunEci = calculateSunPosition(date).sunEci;
 
@@ -439,7 +486,7 @@ const Calc = ({ satNum }) => {
   };
 
   const RiseSetTimes = () => {
-    if (satellites?.tle && satellites.tle.length === 2) {
+    if (satellites?.tle && satellites.tle.length >= 2) {
       const [line1, line2] = satellites.tle;
       const results = [];
       const startTime = new Date();
@@ -516,7 +563,7 @@ const Calc = ({ satNum }) => {
     }
   }, [satellites?.tle, user?.coordinates?.height]);
 
-  return;
+  return null;
 };
 
 export default Calc;

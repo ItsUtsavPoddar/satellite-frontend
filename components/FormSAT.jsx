@@ -18,6 +18,7 @@ import FetchSat from "./FetchSat";
 import Calc from "./Calc";
 import { Passes } from "@/components/Passes";
 import MostSearchedSatellite from "./MostSearchedSatellite";
+import { toast } from "sonner";
 
 // Professional color palette - bold greys and industrial tones
 const colors = [
@@ -116,6 +117,16 @@ const FormSAT = () => {
 
   const handleAddSatellite = () => {
     if (!isValidSat) return;
+
+    // Check if satellite already exists
+    if (satellites[satNumber]) {
+      toast.info("Satellite already loaded", {
+        description: `${satellites[satNumber].name} is already being tracked`,
+      });
+      setSatNumber("");
+      return;
+    }
+
     const color = getRandomColor();
     const newSatellite = {
       id: satNumber,
@@ -269,66 +280,74 @@ const FormSAT = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {Object.values(satellites).map((sat) => (
-              <TableRow
-                key={sat.id}
-                className="border-b border-zinc-900 hover:bg-zinc-900/50"
-              >
-                {/* Triggers calculations/data fetch */}
-                <Calc satNum={sat.id} />
-                <FetchSat satNum={sat.id} />
+            {Object.values(satellites).map((sat) => {
+              // Don't render if satellite has been deleted or has no valid data
+              if (!sat || !sat.id) return null;
 
-                <TableCell className="text-xs whitespace-nowrap align-top py-4">
-                  <div className="font-mono text-zinc-500 text-[10px] mb-1">
-                    [{sat.id}]
-                  </div>
-                  <div className="font-semibold text-zinc-200">{sat.name}</div>
-                </TableCell>
+              return (
+                <TableRow
+                  key={sat.id}
+                  className="border-b border-zinc-900 hover:bg-zinc-900/50"
+                >
+                  {/* Triggers calculations/data fetch */}
+                  <Calc satNum={sat.id} />
+                  <FetchSat satNum={sat.id} />
 
-                <TableCell className="text-zinc-300 text-xs whitespace-nowrap align-top py-4 font-mono">
-                  <div className="space-y-0.5 text-[11px]">
-                    <div>
-                      <span className="text-zinc-500">ALT:</span> {sat.height}{" "}
-                      km
+                  <TableCell className="text-xs whitespace-nowrap align-top py-4">
+                    <div className="font-mono text-zinc-500 text-[10px] mb-1">
+                      [{sat.id}]
                     </div>
-                    <div>
-                      <span className="text-zinc-500">AZI:</span> {sat.azimuth}°
+                    <div className="font-semibold text-zinc-200">
+                      {sat.name}
                     </div>
-                    <div>
-                      <span className="text-zinc-500">ELE:</span>{" "}
-                      {sat.elevation}°
+                  </TableCell>
+
+                  <TableCell className="text-zinc-300 text-xs whitespace-nowrap align-top py-4 font-mono">
+                    <div className="space-y-0.5 text-[11px]">
+                      <div>
+                        <span className="text-zinc-500">ALT:</span> {sat.height}{" "}
+                        km
+                      </div>
+                      <div>
+                        <span className="text-zinc-500">AZI:</span>{" "}
+                        {sat.azimuth}°
+                      </div>
+                      <div>
+                        <span className="text-zinc-500">ELE:</span>{" "}
+                        {sat.elevation}°
+                      </div>
+                      <div>
+                        <span className="text-zinc-500">DST:</span>{" "}
+                        {sat.rangeSat} km
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-zinc-500">DST:</span> {sat.rangeSat}{" "}
-                      km
+                  </TableCell>
+
+                  <TableCell className="text-xs whitespace-nowrap align-top py-4">
+                    <div className="font-mono text-zinc-400 text-[11px]">
+                      {Number(sat.coords[1])?.toFixed(4)}°
+                      <br />
+                      {Number(sat.coords[0])?.toFixed(4)}°
                     </div>
-                  </div>
-                </TableCell>
+                  </TableCell>
 
-                <TableCell className="text-xs whitespace-nowrap align-top py-4">
-                  <div className="font-mono text-zinc-400 text-[11px]">
-                    {Number(sat.coords[1])?.toFixed(4)}°
-                    <br />
-                    {Number(sat.coords[0])?.toFixed(4)}°
-                  </div>
-                </TableCell>
+                  <SatelliteTableCell sat={sat} />
 
-                <SatelliteTableCell sat={sat} />
-
-                <TableCell className="align-top py-4">
-                  <div className="flex flex-col gap-2">
-                    <Passes satelliteId={sat.id} />
-                    <Button
-                      onClick={() => handleDeleteSatellite(sat.id)}
-                      className="text-zinc-400 hover:text-red-400 bg-zinc-900 hover:bg-red-950 border border-zinc-800 hover:border-red-900 px-3 py-1.5 text-xs rounded transition-all"
-                      type="button"
-                    >
-                      Delete
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
+                  <TableCell className="align-top py-4">
+                    <div className="flex flex-col gap-2">
+                      <Passes satelliteId={sat.id} />
+                      <Button
+                        onClick={() => handleDeleteSatellite(sat.id)}
+                        className="text-zinc-400 hover:text-red-400 bg-zinc-900 hover:bg-red-950 border border-zinc-800 hover:border-red-900 px-3 py-1.5 text-xs rounded transition-all"
+                        type="button"
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>
